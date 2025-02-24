@@ -153,4 +153,20 @@ public class User {
   public void setVerified(boolean verified) {
     isVerified = verified;
   }
+
+
+
+
+  @DBRef
+  private Set<Group> groups = new HashSet<>(); // Liste des groupes où l'utilisateur est membre
+
+
+  public void joinGroup(Group group) {
+    this.groups.add(group);
+  }
+
+  public void leaveGroup(Group group) {
+    this.groups.remove(group);
+  }
 }
+

@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.controllers;
+package tn.esprit.SmartMeet.RestControllers;
 
 import java.util.*;
 import java.util.stream.Collectors;

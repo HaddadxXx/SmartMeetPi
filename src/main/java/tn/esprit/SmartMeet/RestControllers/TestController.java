@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.controllers;
+package tn.esprit.SmartMeet.RestControllers;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;

@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.controllers;
+package tn.esprit.SmartMeet.RestControllers;
 
 import tn.esprit.SmartMeet.models.User;
 import tn.esprit.SmartMeet.payload.request.DeleteAccountRequest;
