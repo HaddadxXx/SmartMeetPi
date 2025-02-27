@@ -1,6 +1,6 @@
 package tn.esprit.SmartMeet.security;
 
-import tn.esprit.SmartMeet.Repositories.BlacklistedTokenRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import tn.esprit.SmartMeet.security.jwt.AuthEntryPointJwt;
 import tn.esprit.SmartMeet.security.jwt.AuthTokenFilter;
-import tn.esprit.SmartMeet.security.UserServices.UserDetailsServiceImpl;
+import tn.esprit.SmartMeet.Services.UserServices.UserDetailsServiceImpl;
 
 @Configuration
 

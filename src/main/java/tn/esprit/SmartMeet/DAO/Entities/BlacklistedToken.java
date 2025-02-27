@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.models;
+package tn.esprit.SmartMeet.DAO.Entities;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.annotation.Id;

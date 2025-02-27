@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import tn.esprit.SmartMeet.security.UserServices.UserDetailsImpl;
+import tn.esprit.SmartMeet.Services.UserServices.UserDetailsImpl;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

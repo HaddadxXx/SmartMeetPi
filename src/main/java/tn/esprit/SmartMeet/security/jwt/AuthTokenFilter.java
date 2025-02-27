@@ -3,7 +3,7 @@ package tn.esprit.SmartMeet.security.jwt;
 import java.io.IOException;
 import java.util.Optional;
 
-import tn.esprit.SmartMeet.models.BlacklistedToken;
+import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,8 +19,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import tn.esprit.SmartMeet.Repositories.BlacklistedTokenRepository;
-import tn.esprit.SmartMeet.security.UserServices.UserDetailsServiceImpl;
+import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
+import tn.esprit.SmartMeet.Services.UserServices.UserDetailsServiceImpl;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
 

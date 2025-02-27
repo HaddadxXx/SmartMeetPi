@@ -1,9 +1,11 @@
 package tn.esprit.SmartMeet.RestControllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.SmartMeet.Services.IGroupService;
-import tn.esprit.SmartMeet.models.Group;
+import tn.esprit.SmartMeet.Services.Group.IGroupService;
+import tn.esprit.SmartMeet.DAO.Entities.Group;
+
 
 import java.util.List;
 
@@ -14,10 +16,18 @@ public class GroupController {
     @Autowired
     private IGroupService groupService;
 
-    @PostMapping
+    /*@PostMapping
     public Group createGroup(@RequestBody Group group) {
+        System.out.println("🔹 JSON reçu: " + group.getName());
         return groupService.createGroup(group);
+    }*/
+    @PostMapping
+    public ResponseEntity<?> createGroup(@RequestBody Group group) {
+        System.out.println("🚀 Données reçues : " + group);
+        groupService.createGroup(group);
+        return ResponseEntity.ok(group);
     }
+
 
     @GetMapping("/{id}")
     public Group getGroupById(@PathVariable String id) {

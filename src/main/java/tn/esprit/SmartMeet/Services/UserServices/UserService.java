@@ -1,7 +1,7 @@
-package tn.esprit.SmartMeet.security.UserServices;
+package tn.esprit.SmartMeet.Services.UserServices;
 
-import tn.esprit.SmartMeet.models.User;
-import tn.esprit.SmartMeet.Repositories.UserRepository;
+import tn.esprit.SmartMeet.DAO.Entities.User;
+import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.security.UserServices;
+package tn.esprit.SmartMeet.Services.UserServices;
 
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import tn.esprit.SmartMeet.models.User;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class UserDetailsImpl implements UserDetails {

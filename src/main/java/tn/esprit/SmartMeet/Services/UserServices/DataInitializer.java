@@ -1,15 +1,15 @@
-package tn.esprit.SmartMeet.security.UserServices;
+package tn.esprit.SmartMeet.Services.UserServices;
 
-import tn.esprit.SmartMeet.models.User;
-import tn.esprit.SmartMeet.Repositories.UserRepository;
+import tn.esprit.SmartMeet.DAO.Entities.User;
+import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import tn.esprit.SmartMeet.models.ERole;
-import tn.esprit.SmartMeet.models.Role;
-import tn.esprit.SmartMeet.Repositories.RoleRepository;
+import tn.esprit.SmartMeet.DAO.Entities.ERole;
+import tn.esprit.SmartMeet.DAO.Entities.Role;
+import tn.esprit.SmartMeet.DAO.Repositories.RoleRepository;
 
 
 import java.util.HashSet;

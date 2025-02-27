@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.models;
+package tn.esprit.SmartMeet.DAO.Entities;
 
 public enum ERole {
   ROLE_USER,

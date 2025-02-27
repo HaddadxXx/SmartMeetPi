@@ -1,8 +1,8 @@
 package tn.esprit.SmartMeet.RestControllers;
 
-import tn.esprit.SmartMeet.models.User;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 import tn.esprit.SmartMeet.payload.request.DeleteAccountRequest;
-import tn.esprit.SmartMeet.security.UserServices.IUserService;
+import tn.esprit.SmartMeet.Services.UserServices.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

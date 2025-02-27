@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.models;
+package tn.esprit.SmartMeet.DAO.Entities;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.security.UserServices;
+package tn.esprit.SmartMeet.Services.UserServices;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import tn.esprit.SmartMeet.models.User;
-import tn.esprit.SmartMeet.Repositories.UserRepository;
+import tn.esprit.SmartMeet.DAO.Entities.User;
+import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {

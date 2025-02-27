@@ -1,4 +1,4 @@
-package tn.esprit.SmartMeet.security.UserServices;
+package tn.esprit.SmartMeet.Services.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;

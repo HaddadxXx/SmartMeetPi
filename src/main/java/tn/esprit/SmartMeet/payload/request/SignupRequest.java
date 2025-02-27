@@ -2,7 +2,7 @@ package tn.esprit.SmartMeet.payload.request;
 
 import java.util.Set;
 
-import tn.esprit.SmartMeet.models.ERole;
+import tn.esprit.SmartMeet.DAO.Entities.ERole;
 import jakarta.validation.constraints.*;
  
 public class SignupRequest {

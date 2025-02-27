@@ -1,6 +1,6 @@
-package tn.esprit.SmartMeet.Repositories;
+package tn.esprit.SmartMeet.DAO.Repositories;
 
-import tn.esprit.SmartMeet.models.BlacklistedToken;
+import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

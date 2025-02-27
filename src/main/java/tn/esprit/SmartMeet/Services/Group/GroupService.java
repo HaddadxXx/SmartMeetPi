@@ -1,10 +1,10 @@
-package tn.esprit.SmartMeet.Services;
+package tn.esprit.SmartMeet.Services.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tn.esprit.SmartMeet.Repositories.GroupRepository;
-import tn.esprit.SmartMeet.Repositories.UserRepository;
-import tn.esprit.SmartMeet.models.Group;
-import tn.esprit.SmartMeet.models.User;
+import tn.esprit.SmartMeet.DAO.Repositories.GroupRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
+import tn.esprit.SmartMeet.DAO.Entities.Group;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 
 import java.util.Optional;
 
@@ -95,3 +95,5 @@ public class GroupService implements IGroupService {
         return "Groupe ou utilisateur introuvable.";
     }
 }
+
+

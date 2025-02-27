@@ -1,6 +1,6 @@
-package tn.esprit.SmartMeet.Services;
+package tn.esprit.SmartMeet.Services.Group;
 
-import tn.esprit.SmartMeet.models.Group;
+import tn.esprit.SmartMeet.DAO.Entities.Group;
 
 import java.util.List;
 

@@ -1,10 +1,10 @@
-package tn.esprit.SmartMeet.Repositories;
+package tn.esprit.SmartMeet.DAO.Repositories;
 
 import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import tn.esprit.SmartMeet.models.User;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 import org.springframework.stereotype.Repository;
 
 @Repository

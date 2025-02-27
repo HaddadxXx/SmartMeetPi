@@ -3,10 +3,10 @@ package tn.esprit.SmartMeet.RestControllers;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import tn.esprit.SmartMeet.models.BlacklistedToken;
-import tn.esprit.SmartMeet.Repositories.BlacklistedTokenRepository;
-import tn.esprit.SmartMeet.security.UserServices.EmailService;
-import tn.esprit.SmartMeet.security.UserServices.OTPService;
+import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
+import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
+import tn.esprit.SmartMeet.Services.UserServices.EmailService;
+import tn.esprit.SmartMeet.Services.UserServices.OTPService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,17 +23,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
-import tn.esprit.SmartMeet.models.ERole;
-import tn.esprit.SmartMeet.models.Role;
-import tn.esprit.SmartMeet.models.User;
+import tn.esprit.SmartMeet.DAO.Entities.ERole;
+import tn.esprit.SmartMeet.DAO.Entities.Role;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 import tn.esprit.SmartMeet.payload.request.LoginRequest;
 import tn.esprit.SmartMeet.payload.request.SignupRequest;
 import tn.esprit.SmartMeet.payload.response.JwtResponse;
 import tn.esprit.SmartMeet.payload.response.MessageResponse;
-import tn.esprit.SmartMeet.Repositories.RoleRepository;
-import tn.esprit.SmartMeet.Repositories.UserRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.RoleRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
-import tn.esprit.SmartMeet.security.UserServices.UserDetailsImpl;
+import tn.esprit.SmartMeet.Services.UserServices.UserDetailsImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
