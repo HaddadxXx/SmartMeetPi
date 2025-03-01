@@ -1,5 +1,6 @@
 package tn.esprit.SmartMeet.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.SmartMeet.models.Transport;
@@ -26,12 +27,12 @@ public class TransportController {
     }
 
     @PostMapping("/create")
-    public Transport createTransport(@RequestBody Transport transport) {
+    public Transport createTransport(@Valid @RequestBody Transport transport) {
         return transportService.createTransport(transport);
     }
 
     @PutMapping("/update/{id}")
-    public Transport updateTransport(@PathVariable String id, @RequestBody Transport transport) {
+    public Transport updateTransport(@Valid @PathVariable String id, @RequestBody Transport transport) {
         return transportService.updateTransport(id, transport);
     }
 

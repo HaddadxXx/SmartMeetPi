@@ -84,7 +84,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
                     .requestMatchers("/api/transports/**").permitAll() // ✅ Rendre accessible
-                    .requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible.requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible
+
 
                     .anyRequest().authenticated());
 

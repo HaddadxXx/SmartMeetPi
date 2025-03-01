@@ -1,5 +1,6 @@
 package tn.esprit.SmartMeet.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.SmartMeet.models.Ressource;
@@ -26,12 +27,12 @@ public class RessourceController {
     }
 
     @PostMapping("/create")
-    public Ressource createRessource(@RequestBody Ressource ressource) {
+    public Ressource createRessource(@Valid @RequestBody Ressource ressource) {
         return ressourceService.createRessource(ressource);
     }
 
     @PutMapping("/update/{id}")
-    public Ressource updateRessource(@PathVariable String id, @RequestBody Ressource ressource) {
+    public Ressource updateRessource(@PathVariable String id,@Valid @RequestBody Ressource ressource) {
         return ressourceService.updateRessource(id, ressource);
     }
 
