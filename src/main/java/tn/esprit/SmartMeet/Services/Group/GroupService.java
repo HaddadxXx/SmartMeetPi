@@ -1,11 +1,15 @@
 package tn.esprit.SmartMeet.Services.Group;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Repositories.GroupRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import tn.esprit.SmartMeet.DAO.Entities.Group;
 import tn.esprit.SmartMeet.DAO.Entities.User;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import java.util.List;
@@ -19,8 +23,29 @@ public class GroupService implements IGroupService {
     @Autowired
     private UserRepository userRepository;
 
-    @Override
-    public Group createGroup(Group group) {
+    private final String UPLOAD_DIRECTORY = "uploads/";
+
+    public String uploadPhoto(MultipartFile file) {
+        try {
+            if (!file.isEmpty()) {
+                String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                Path path = Paths.get(UPLOAD_DIRECTORY + fileName);
+                Files.copy(file.getInputStream(), path);
+                return fileName; // Retourne le chemin du fichier
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Group createGroup(Group group, MultipartFile file) {
+        if (file != null) {
+            String photoPath = uploadPhoto(file);
+            if (photoPath != null) {
+                group.setPhoto(photoPath);
+            }
+        }
         return groupRepository.save(group);
     }
 
