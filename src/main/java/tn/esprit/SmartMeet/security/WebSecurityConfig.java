@@ -83,9 +83,11 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
+                    .requestMatchers("/api/events/**").permitAll() // ✅ Rendre accessible
                     .requestMatchers("/api/transports/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/api/sessions/**").permitAll() // ✅ Rendre accessible
                     .requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible.requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible
-
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
                     .anyRequest().authenticated());
 

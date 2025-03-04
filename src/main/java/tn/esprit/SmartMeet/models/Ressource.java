@@ -10,16 +10,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Ressource {
     @Id
     private String id; // ID généré automatiquement
-    @NotBlank(message = "Le nom de la ressource est obligatoire")
-    @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
+    @NotBlank(message = "The resource name is required")
+    @Size(min = 2, max = 50, message = "The name must be between 2 and 50 characters long")
     private String name;
-    @NotBlank(message = "Le type de ressource est obligatoire")
+    @NotBlank(message = "The resource type is required")
     private String typeR; // Ex: Salle, Matériel, etc.
-    @Min(value = 1, message = "La quantité doit être supérieure à zéro")
+    @Min(value = 1, message = "The quantity must be greater than zero")
     private long quantite;
-    @NotBlank(message = "Le statut de la ressource est obligatoire")
+    @NotBlank(message = "The status of the resource is required")
     private String statutR;
 }

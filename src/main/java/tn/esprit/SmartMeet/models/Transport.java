@@ -12,14 +12,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class Transport {
     @Id
     private String id; // ID MongoDB
-    @NotBlank(message = "Le type de transport est obligatoire")
-    @Size(min = 2, max = 50, message = "Le type doit contenir entre 2 et 50 caractères")
+    @NotBlank(message = "The transport type is required")
+    @Size(min = 2, max = 50, message = "The type must contain between 2 and 50 characters")
     private String type; // Ex: Bus, Voiture, Navette
-    @Min(value = 1, message = "La quantité doit être supérieure à zéro")
+    @Min(value = 1, message = "The quantity must be greater than zero")
     private int capacite; // Nombre de places
-    @NotBlank(message = "Le statut du transport est obligatoire")
+    @NotBlank(message = "The transport status is required")
     private String statut;
 }
