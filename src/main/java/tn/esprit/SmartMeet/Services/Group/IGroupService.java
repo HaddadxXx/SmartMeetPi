@@ -2,6 +2,7 @@ package tn.esprit.SmartMeet.Services.Group;
 
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.Group;
+import tn.esprit.SmartMeet.DAO.Entities.User;
 
 import java.util.List;
 
@@ -15,5 +16,8 @@ public interface IGroupService {
 
     String addMemberToGroup(String groupId, String userId);  // Ajouter un membre
     String removeMemberFromGroup(String groupId, String userId);  // Supprimer un membre
+    List<Group> getByMember(String userId);
+    List<Group> getByOwner(String userId);
+
 }
 

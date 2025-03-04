@@ -3,6 +3,8 @@ package tn.esprit.SmartMeet.RestControllers;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.Services.UserServices.EmailService;
@@ -65,13 +67,27 @@ public class AuthController {
 	private final Map<String, User> tempUserStorage = new HashMap<>();
 
 	@PostMapping("/signin")
-	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-		System.out.println("yaaaaaaaaaaaaaaaaaaaaa");
+	public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 		String jwt = jwtUtils.generateJwtToken(authentication);
+
+
+		ResponseCookie cookie = ResponseCookie.from("jwt", jwt)
+				.httpOnly(true)
+				.secure(true)
+				.sameSite("Strict")
+				.path("/")
+				.maxAge(3600) // Expire après 1h
+				.build();
+
+		response.addHeader("Set-Cookie", cookie.toString());
+
+
+
 
 		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 		List<String> roles = userDetails.getAuthorities().stream()
@@ -89,7 +105,7 @@ public class AuthController {
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 		System.out.println("--------------------------");
-		System.out.println("yaaaaaaaaaaaaaaaaaaaaa");
+
 
 		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
 
@@ -106,7 +122,7 @@ public class AuthController {
 
 		Set<ERole> strRoles = signUpRequest.getRoles();
 		Set<Role> roles = new HashSet<>();
-		System.out.println("dddddddddd");
+
 		System.out.println(strRoles);
 		if (strRoles == null) {
 			Role userRole = roleRepository.findByName(ERole.ROLE_USER)
@@ -157,7 +173,7 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout(@RequestHeader("Authorization") String tokenHeader) {
+	public ResponseEntity<?> logout(@RequestHeader("Authorization") String tokenHeader,HttpServletResponse response) {
 		if (tokenHeader == null || !tokenHeader.startsWith("Bearer ")) {
 			return ResponseEntity.badRequest().body("Token invalide");
 		}
@@ -168,6 +184,19 @@ public class AuthController {
 		blacklistedToken.setExpirationDate(new Date(System.currentTimeMillis() + 3600000)); // Expiration après 1h
 
 		blacklistedTokenRepository.save(blacklistedToken);
+
+         //lastnight
+		// Supprimer le cookie JWT
+		ResponseCookie cookie = ResponseCookie.from("jwt", "")
+				.httpOnly(true)
+				.secure(true)
+				.sameSite("Strict")
+				.path("/")
+				.maxAge(0) // Cookie supprimé
+				.build();
+
+		response.addHeader("Set-Cookie", cookie.toString());
+
 
 		SecurityContextHolder.clearContext(); // Supprimer les informations d'authentification en mémoire
 		return ResponseEntity.ok("Déconnexion réussie");

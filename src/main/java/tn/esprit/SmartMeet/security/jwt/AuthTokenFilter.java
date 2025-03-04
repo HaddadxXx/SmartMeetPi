@@ -3,6 +3,7 @@ package tn.esprit.SmartMeet.security.jwt;
 import java.io.IOException;
 import java.util.Optional;
 
+import jakarta.servlet.http.Cookie;
 import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -71,14 +72,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   }
 
   private String parseJwt(HttpServletRequest request) {
+    // Vérifier l'en-tête Authorization
     String headerAuth = request.getHeader("Authorization");
-
     if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
       return headerAuth.substring(7);
     }
-
+    // Si non présent, vérifier dans les cookies
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("jwt".equals(cookie.getName())) { // Remplacez "nomDuCookie" par le nom utilisé lors de la création du cookie JWT
+          return cookie.getValue();
+        }
+      }
+    }
     return null;
   }
+
   @Autowired
 
   public AuthTokenFilter(JwtUtils jwtUtils, UserDetailsServiceImpl userDetailsService, BlacklistedTokenRepository blacklistedTokenRepository) {

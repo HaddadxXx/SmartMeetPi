@@ -1,5 +1,6 @@
 package tn.esprit.SmartMeet.security;
 
+import org.springframework.http.HttpMethod;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import tn.esprit.SmartMeet.security.jwt.AuthEntryPointJwt;
 import tn.esprit.SmartMeet.security.jwt.AuthTokenFilter;
 import tn.esprit.SmartMeet.Services.UserServices.UserDetailsServiceImpl;
+
+import java.util.List;
 
 @Configuration
 
@@ -82,9 +85,23 @@ public class WebSecurityConfig {
                     .requestMatchers( "/api/auth/verify-otp").permitAll()// ✅ Autoriser OTP sans auth
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
-                    .requestMatchers("/api/groups/**").permitAll()
+                    .requestMatchers("/api/uploads/**").permitAll()
+
+                    .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
+                    //.requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
                     .anyRequest().authenticated());
+    http.cors(cors -> cors.configurationSource(request -> {
+      org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
+      config.setAllowCredentials(true); // Permet les cookies 🔥
+      config.setAllowedOrigins(List.of("http://localhost:4200")); // Adresse Frontend
+      config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+      config.setExposedHeaders(List.of("Authorization")); // 🔥 Exposer le JWT
+
+      return config;
+    }));
+
 
     http.authenticationProvider(authenticationProvider());
 

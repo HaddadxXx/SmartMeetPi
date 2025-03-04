@@ -1,18 +1,23 @@
 package tn.esprit.SmartMeet.Services.Group;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Repositories.GroupRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import tn.esprit.SmartMeet.DAO.Entities.Group;
 import tn.esprit.SmartMeet.DAO.Entities.User;
-
+import org.springframework.security.core.Authentication;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Optional;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
 public class GroupService implements IGroupService {
@@ -40,6 +45,40 @@ public class GroupService implements IGroupService {
     }
 
     public Group createGroup(Group group, MultipartFile file) {
+
+
+        // Récupération de l'utilisateur connecté
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Utilisateur non authentifié");
+        }
+
+        // Extraire l'email depuis UserDetails
+        String email;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername(); // getUsername() retourne l'email
+        } else {
+            throw new RuntimeException("Impossible de récupérer l'email de l'utilisateur");
+        }
+
+        // Chercher l'utilisateur en base de données
+        User owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Définir l'utilisateur comme propriétaire du groupe
+        group.setOwner(owner);
+
+        // Ajouter l'utilisateur à la liste des membres
+        if (group.getMembers() == null) {
+            group.setMembers(new HashSet<>());
+        }
+        group.getMembers().add(owner);
+
+
+
         if (file != null) {
             String photoPath = uploadPhoto(file);
             if (photoPath != null) {
@@ -119,6 +158,30 @@ public class GroupService implements IGroupService {
         }
         return "Groupe ou utilisateur introuvable.";
     }
+
+    public List<Group> getByMember(String userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return user.map(groupRepository::findByMembersContaining).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    /*public List<Group> getByMember(String userId) {
+        try {
+            Optional<User> user = userRepository.findById(userId);
+            return user.map(groupRepository::findByMembersContaining)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+        } catch (Exception e) {
+            System.out.println("Error fetching groups for user {}: {}");
+            System.out.println(e.getMessage());
+            throw new RuntimeException("An error occurred while retrieving groups", e);
+        }
+    }*/
+
+    @Override
+    public List<Group> getByOwner(String userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return user.map(groupRepository::findByOwner).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
 
 
