@@ -9,28 +9,22 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
-import java.util.List;
-
 @Document
 @Data  // Génère les getters, setters, toString, etc.
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Event {
+public class Session {
+
     @Id
-    private String idEvent;
-    private String nomEvent;
-    private String theme ;
-    private String description ;
-    private TypeEvent typeEvent ;
-    // private LocalDate dateDebut ;
-    // private LocalDate dateFin;
-    private long capacite ;
+    private String idSession ;
+    private String titre;
+    private String date;
+
 
     @JsonIgnore
     @DBRef
-    private List<Session> sessions;
+    private Event evenement;
+
 
 }
-

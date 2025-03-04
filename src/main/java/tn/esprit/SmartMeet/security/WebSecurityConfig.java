@@ -82,7 +82,12 @@ public class WebSecurityConfig {
                     .requestMatchers( "/api/auth/verify-otp").permitAll()// ✅ Autoriser OTP sans auth
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
+                    .requestMatchers("/api/users/get/me").permitAll()  // Autoriser cette route sans authentification
+                    .requestMatchers("/events/**").permitAll()
+                    .requestMatchers("/sessions/**").permitAll()
+                    .requestMatchers("/events/ajouterSessionEtAffecterAEvenement/**").authenticated()
                     .requestMatchers("/api/test/protected").authenticated()
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                     .anyRequest().authenticated());
 
     http.authenticationProvider(authenticationProvider());

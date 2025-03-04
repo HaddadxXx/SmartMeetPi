@@ -7,5 +7,6 @@ public interface IUserService {
     Optional<User> getUserByEmail(String email);
     User updateUserProfile(String email, User updatedUser);
     boolean deleteUserByEmail(String email, String password);
+    User getCurrentAuthenticatedUser();
 
 }

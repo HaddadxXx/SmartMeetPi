@@ -50,4 +50,11 @@ public class UserController {
         }
         return ResponseEntity.badRequest().body("Invalid password.");
     }
+
+    @GetMapping("/get/me")
+    public User getAuthenticatedUser() {
+        return userService.getCurrentAuthenticatedUser();
+    }
+
+
 }
