@@ -84,6 +84,9 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
+                    .requestMatchers("/posts/**").permitAll()
+                    .requestMatchers("/posts/all").permitAll()
+                    .requestMatchers("/comments/**").permitAll() // Exemple : autoriser toutes les requêtes vers /api/posts
                     .anyRequest().authenticated());
 
     http.authenticationProvider(authenticationProvider());
