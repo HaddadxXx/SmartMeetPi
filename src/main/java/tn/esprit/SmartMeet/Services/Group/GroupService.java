@@ -159,6 +159,8 @@ public class GroupService implements IGroupService {
         return "Groupe ou utilisateur introuvable.";
     }
 
+
+    @Override
     public List<Group> getByMember(String userId) {
         Optional<User> user = userRepository.findById(userId);
         return user.map(groupRepository::findByMembersContaining).orElseThrow(() -> new RuntimeException("User not found"));

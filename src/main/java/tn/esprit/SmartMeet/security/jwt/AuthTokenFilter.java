@@ -96,4 +96,5 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     this.blacklistedTokenRepository = blacklistedTokenRepository;
   }
 
+
 }
