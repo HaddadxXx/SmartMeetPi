@@ -46,10 +46,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
           logger.warn("Token refusé car en liste noire.");
           response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalide ou expiré.");
           return;
-        }        if (blacklisted.isPresent()) {
-          logger.warn("Token refusé car en liste noire.");
-          response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalide ou expiré.");
-          return;
         }
 
         // ✅ Vérification et authentification de l'utilisateur

@@ -1,9 +1,14 @@
 package tn.esprit.SmartMeet.Services.Group;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Repositories.GroupRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
@@ -14,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 
 import java.util.List;
@@ -44,6 +50,7 @@ public class GroupService implements IGroupService {
         return null;
     }
 
+    /*
     public Group createGroup(Group group, MultipartFile file) {
 
 
@@ -87,6 +94,92 @@ public class GroupService implements IGroupService {
         }
         return groupRepository.save(group);
     }
+*/
+
+    /************************/
+
+    public Group createGroup(Group group, MultipartFile file) {
+
+        // Auth + user loading logic unchanged...
+// Récupération de l'utilisateur connecté
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("Utilisateur non authentifié");
+        }
+
+        // Extraire l'email depuis UserDetails
+        String email;
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername(); // getUsername() retourne l'email
+        } else {
+            throw new RuntimeException("Impossible de récupérer l'email de l'utilisateur");
+        }
+
+        // Chercher l'utilisateur en base de données
+        User owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Vérifier si le groupe est lié à la science
+        if (!isRelatedToScience(group.getName(), group.getDescription())) {
+            throw new RuntimeException("Le groupe n'est pas lié au domaine scientifique.");
+        }
+
+        // Set owner, add to members, handle photo (same as before)
+        group.setOwner(owner);
+        if (group.getMembers() == null) {
+            group.setMembers(new HashSet<>());
+        }
+        group.getMembers().add(owner);
+
+        if (file != null) {
+            String photoPath = uploadPhoto(file);
+            if (photoPath != null) {
+                group.setPhoto(photoPath);
+            }
+        }
+
+        return groupRepository.save(group);
+    }
+
+    private boolean isRelatedToScience(String name, String description) {
+        String prompt = String.format(
+                "Is the following group name and description related to the science domain?\n\nName: %s\nDescription: %s\n\nAnswer only YES or NO.",
+                name, description
+        );
+
+        String apiKey = "AIzaSyDbUoKYMNChLdK-jmcwF64FSjWOZc-yaec";
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey;
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        Map<String, Object> requestBody = Map.of(
+                "contents", List.of(Map.of(
+                        "parts", List.of(Map.of("text", prompt))
+                ))
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
+            Map content = (Map) ((List) response.getBody().get("candidates")).get(0);
+            Map innerContent = (Map) content.get("content");
+            List parts = (List) innerContent.get("parts");
+            String answer = ((Map) parts.get(0)).get("text").toString().trim().toLowerCase();
+
+            return answer.contains("yes");
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la vérification avec Gemini: " + e.getMessage());
+        }
+    }
+
+    /*******************/
 
     @Override
     public Group getGroupById(String groupId) {

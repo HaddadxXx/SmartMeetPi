@@ -8,7 +8,6 @@ import org.springframework.http.ResponseCookie;
 import tn.esprit.SmartMeet.DAO.Entities.BlacklistedToken;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.Services.UserServices.EmailService;
-import tn.esprit.SmartMeet.Services.UserServices.OTPService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +55,7 @@ public class AuthController {
 	@Autowired
 	JwtUtils jwtUtils;
 
-	@Autowired
-	private OTPService otpService;
+
 
 	@Autowired
 	private EmailService emailService;
