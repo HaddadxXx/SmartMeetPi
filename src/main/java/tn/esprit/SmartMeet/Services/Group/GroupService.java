@@ -1,10 +1,7 @@
 package tn.esprit.SmartMeet.Services.Group;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -15,6 +12,8 @@ import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
 import tn.esprit.SmartMeet.DAO.Entities.Group;
 import tn.esprit.SmartMeet.DAO.Entities.User;
 import org.springframework.security.core.Authentication;
+import tn.esprit.SmartMeet.exeptions.NotScienceDomainException;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 public class GroupService implements IGroupService {
@@ -35,6 +33,9 @@ public class GroupService implements IGroupService {
     private UserRepository userRepository;
 
     private final String UPLOAD_DIRECTORY = "uploads/";
+
+    @Value("${gemini.api.key}")
+    private String apiKey ;
 
     public String uploadPhoto(MultipartFile file) {
         try {
@@ -97,37 +98,34 @@ public class GroupService implements IGroupService {
 */
 
     /************************/
-
     public Group createGroup(Group group, MultipartFile file) {
-
-        // Auth + user loading logic unchanged...
-// Récupération de l'utilisateur connecté
+        // Authentication and user retrieval logic (unchanged)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("Utilisateur non authentifié");
         }
 
-        // Extraire l'email depuis UserDetails
         String email;
         Object principal = authentication.getPrincipal();
-
         if (principal instanceof UserDetails) {
             email = ((UserDetails) principal).getUsername(); // getUsername() retourne l'email
         } else {
             throw new RuntimeException("Impossible de récupérer l'email de l'utilisateur");
         }
 
-        // Chercher l'utilisateur en base de données
+        // Retrieve user from database
         User owner = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        // Vérifier si le groupe est lié à la science
+
+        // Check if the group is related to science
         if (!isRelatedToScience(group.getName(), group.getDescription())) {
-            throw new RuntimeException("Le groupe n'est pas lié au domaine scientifique.");
+            System.out.println(group.getName()+"//"+group.getDescription());
+            System.out.println("Le groupe n'est pas lié au domaine scientifique.");
+            throw new NotScienceDomainException("Le groupe n'est pas lié au domaine scientifique.");
         }
 
-        // Set owner, add to members, handle photo (same as before)
+        // Set owner, add to members, handle photo
         group.setOwner(owner);
         if (group.getMembers() == null) {
             group.setMembers(new HashSet<>());
@@ -150,34 +148,82 @@ public class GroupService implements IGroupService {
                 name, description
         );
 
-        String apiKey = "AIzaSyDbUoKYMNChLdK-jmcwF64FSjWOZc-yaec";
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent?key=" + apiKey;
 
         RestTemplate restTemplate = new RestTemplate();
-
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
         Map<String, Object> requestBody = Map.of(
                 "contents", List.of(Map.of(
                         "parts", List.of(Map.of("text", prompt))
                 ))
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
-            Map content = (Map) ((List) response.getBody().get("candidates")).get(0);
-            Map innerContent = (Map) content.get("content");
-            List parts = (List) innerContent.get("parts");
-            String answer = ((Map) parts.get(0)).get("text").toString().trim().toLowerCase();
-
-            return answer.contains("yes");
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, entity, Map.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                Map<String, Object> body = response.getBody();
+                System.out.println("Response Body: " + body);
+                if (body != null) {
+                    String answer = extractAnswer(body);  // Pass the full response body here
+                    System.out.println("Extracted answer: " + answer);
+                    return answer != null && answer.equalsIgnoreCase("yes");
+                }
+            }
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la vérification avec Gemini: " + e.getMessage());
         }
+        return false;
     }
+
+    private String extractAnswer(Map<String, Object> responseBody) {
+        if (responseBody == null) {
+            return null;
+        }
+
+        // Get the candidates array from the response
+        List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseBody.get("candidates");
+
+        if (candidates == null || candidates.isEmpty()) {
+            System.out.println("No candidates found in response");
+            return null;
+        }
+
+        // Get the first candidate
+        Map<String, Object> firstCandidate = candidates.get(0);
+        if (firstCandidate == null) {
+            System.out.println("First candidate is null");
+            return null;
+        }
+
+        // Get the content from the candidate
+        Map<String, Object> content = (Map<String, Object>) firstCandidate.get("content");
+        if (content == null) {
+            System.out.println("Content is null in candidate");
+            return null;
+        }
+
+        // Get the parts from the content
+        List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+        if (parts == null || parts.isEmpty()) {
+            System.out.println("No parts found in content");
+            return null;
+        }
+
+        // Get the first part
+        Map<String, Object> firstPart = parts.get(0);
+        if (firstPart == null || !firstPart.containsKey("text")) {
+            System.out.println("No text in first part");
+            return null;
+        }
+
+        // Return the trimmed text
+        return firstPart.get("text").toString().trim();
+    }
+
+
 
     /*******************/
 
