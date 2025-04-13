@@ -19,7 +19,7 @@ public class Transport {
     @NotBlank(message = "The transport type is required")
     @Size(min = 2, max = 50, message = "The type must contain between 2 and 50 characters")
     private String type; // Ex: Bus, Voiture, Navette
-    @Min(value = 1, message = "The quantity must be greater than zero")
+    @Min(value = 1, message = "The capacity must be greater than zero")
     private int capacite; // Nombre de places
     @NotBlank(message = "The transport status is required")
     private String statut;

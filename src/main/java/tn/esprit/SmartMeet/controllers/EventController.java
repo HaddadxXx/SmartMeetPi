@@ -50,13 +50,6 @@ public class EventController {
     public void deleteEvent(@PathVariable String id) {
         eventService.deleteEvent(id);
     }
-/*
-    @PostMapping("/{eventId}/addTransport/{transportId}")
-    public ResponseEntity<Event> addTransportToEvent(@PathVariable String eventId,
-                                                     @PathVariable String transportId) {
-        Event updatedEvent = eventService.addTransportToEvent(eventId, transportId);
-        return ResponseEntity.ok(updatedEvent);
-    }*/
 
 
     @PutMapping("/affecter-transport/{eventId}/{transportId}")
