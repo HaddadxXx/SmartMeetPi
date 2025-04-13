@@ -38,6 +38,7 @@ public class UserController {
                                                @RequestPart("user") User updatedUser,
                                                @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
+
             User user = userService.updateUserProfile(userDetails.getUsername(), updatedUser, file);
             System.out.println(userDetails);
             return ResponseEntity.ok(user);
