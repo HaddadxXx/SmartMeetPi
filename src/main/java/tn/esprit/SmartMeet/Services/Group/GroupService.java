@@ -305,17 +305,7 @@ public class GroupService implements IGroupService {
         return user.map(groupRepository::findByMembersContaining).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    /*public List<Group> getByMember(String userId) {
-        try {
-            Optional<User> user = userRepository.findById(userId);
-            return user.map(groupRepository::findByMembersContaining)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-        } catch (Exception e) {
-            System.out.println("Error fetching groups for user {}: {}");
-            System.out.println(e.getMessage());
-            throw new RuntimeException("An error occurred while retrieving groups", e);
-        }
-    }*/
+
 
     @Override
     public List<Group> getByOwner(String userId) {

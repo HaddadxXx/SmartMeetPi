@@ -1,5 +1,7 @@
 package tn.esprit.SmartMeet.RestControllers;
 
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.User;
 import tn.esprit.SmartMeet.payload.request.DeleteAccountRequest;
 import tn.esprit.SmartMeet.Services.UserServices.IUserService;
@@ -10,10 +12,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class UserController {
 
     private final IUserService userService;
@@ -29,11 +33,13 @@ public class UserController {
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/me")
+    @PutMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateUserProfile(@AuthenticationPrincipal UserDetails userDetails,
-                                               @RequestBody User updatedUser) {
+                                               @RequestPart("user") User updatedUser,
+                                               @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
-            User user = userService.updateUserProfile(userDetails.getUsername(), updatedUser);
+            User user = userService.updateUserProfile(userDetails.getUsername(), updatedUser, file);
+            System.out.println(userDetails);
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -50,4 +56,16 @@ public class UserController {
         }
         return ResponseEntity.badRequest().body("Invalid password.");
     }
+
+
+    // Exemple : GET /api/users/search?userId=123&keyword=amine
+
+    @GetMapping("/search")
+    public List<User> searchUsers(
+            @RequestParam String userId,
+            @RequestParam String keyword
+    ) {
+        return userService.searchPotentialFriends(userId, keyword);
+    }
+
 }
