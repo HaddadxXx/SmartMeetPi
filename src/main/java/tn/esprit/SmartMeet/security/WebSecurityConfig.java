@@ -80,6 +80,17 @@ public class WebSecurityConfig {
     http.csrf(csrf -> csrf.disable())
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            //////////
+
+
+
+
+
+
+            ///////
+
+
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/send-otp").permitAll()
                     .requestMatchers( "/api/auth/verify-otp").permitAll()// ✅ Autoriser OTP sans auth
@@ -91,12 +102,22 @@ public class WebSecurityConfig {
 
 
 
+
+
                     .requestMatchers("/api/users/me").permitAll()
+                    .requestMatchers("/api/users/**").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
                     .requestMatchers("/api/friends/**").permitAll()          // Ajout pour tester la liste d'amis
                     .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
-                    //.requestMatchers("/api/groups/**").permitAll()
+                    .requestMatchers("/ws/**").permitAll()          // Endpoint WebSocket (SockJS handshake)
+                    .requestMatchers("/app/sendMessage/**").permitAll() // Point de réception des messages
+                    .requestMatchers("/topic/**").permitAll()       // Point de diffusion des messages
+                    .requestMatchers("http://localhost:8080/ws").permitAll()
+                    .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
+                    .requestMatchers("/api/groups/**").permitAll()
+                    .requestMatchers("/api/messages/**").permitAll()
+                    .requestMatchers("/ws/**", "/app/**", "/topic/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
                     .anyRequest().authenticated());
     http.cors(cors -> cors.configurationSource(request -> {

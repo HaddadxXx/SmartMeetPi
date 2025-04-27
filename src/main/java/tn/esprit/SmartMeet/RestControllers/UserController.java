@@ -69,4 +69,16 @@ public class UserController {
         return userService.searchPotentialFriends(userId, keyword);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable String id) {
+        Optional<User> user = userService.getUserById(id);
+        return user.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public List<User> getUsers() {
+        return userService.getAllUsers();
+    }
+
 }

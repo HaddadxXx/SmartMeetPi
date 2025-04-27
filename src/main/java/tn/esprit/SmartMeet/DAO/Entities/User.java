@@ -1,6 +1,7 @@
 package tn.esprit.SmartMeet.DAO.Entities;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.validation.constraints.Email;
@@ -41,9 +42,79 @@ public class User {
   private String expertiseArea;
   private String interests;
   private double scoreReputation;
-   private boolean isVerified;
+  private boolean isVerified;
   @DBRef
   private Set<Role> roles = new HashSet<>();
+
+
+  private List<String> sentMessages; // Liste des IDs des messages envoyés
+  private List<String> receivedMessages; // Liste des IDs des messages reçus
+
+  public List<String> getSentMessages() {
+    return sentMessages;
+  }
+
+  public void setSentMessages(List<String> sentMessages) {
+    this.sentMessages = sentMessages;
+  }
+
+  public List<String> getReceivedMessages() {
+    return receivedMessages;
+  }
+
+  public void setReceivedMessages(List<String> receivedMessages) {
+    this.receivedMessages = receivedMessages;
+  }
+
+  public String getTime() {
+    return time;
+  }
+
+  public void setTime(String time) {
+    this.time = time;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  public Integer getCount() {
+    return count;
+  }
+
+  public void setCount(Integer count) {
+    this.count = count;
+  }
+
+  public Set<Group> getGroups() {
+    return groups;
+  }
+
+  public void setGroups(Set<Group> groups) {
+    this.groups = groups;
+  }
+
+  private String time; // Exemple : "2.40 PM" ou une valeur dynamique
+  private String status; // "online", "offline"
+  private String message; // Dernier message de l'utilisateur (à dynamiser)
+  private Integer count; // Nombre de messages non lus (à dynamiser)
+
+
+
+
+
 
   public User() {
   }
@@ -169,4 +240,3 @@ public class User {
     this.groups.remove(group);
   }
 }
-

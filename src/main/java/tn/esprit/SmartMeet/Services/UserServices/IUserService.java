@@ -8,8 +8,12 @@ import java.util.Optional;
 
 public interface IUserService {
     Optional<User> getUserByEmail(String email);
+    Optional<User> getUserById(String id);
+
     User updateUserProfile(String email, User updatedUser, MultipartFile file);
 
     boolean deleteUserByEmail(String email, String password);
     public List<User> searchPotentialFriends(String userId, String keyword);
+
+    public List<User> getAllUsers();
 }

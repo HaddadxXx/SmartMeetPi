@@ -53,6 +53,11 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public Optional<User> getUserById(String id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
     public User updateUserProfile(String email, User updatedUser,MultipartFile file) {
         return userRepository.findByEmail(email).map(existingUser -> {
             if (updatedUser.getFirstName() != null && !updatedUser.getFirstName().isEmpty()) {
@@ -110,6 +115,11 @@ public class UserService implements IUserService {
         return matchingUsers.stream()
                 .filter(user -> !excludedIds.contains(user.getId()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
 }
