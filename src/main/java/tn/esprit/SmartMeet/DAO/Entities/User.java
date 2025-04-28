@@ -1,8 +1,11 @@
 package tn.esprit.SmartMeet.DAO.Entities;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -154,6 +157,9 @@ public class User {
     isVerified = verified;
   }
 
+  @DBRef
+  @JsonIgnore // Empêche la sérialisation de la liste des événements dans l'entité User
+  private List<Event> events;  // Liste des événements auxquels l'utilisateur participe
 
 
 
