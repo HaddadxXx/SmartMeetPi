@@ -1,22 +1,17 @@
 package tn.esprit.SmartMeet.Services.serviceIslem;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import tn.esprit.SmartMeet.DAO.Entities.Contract;
-import tn.esprit.SmartMeet.DAO.Entities.Event;
-import tn.esprit.SmartMeet.DAO.Repositories.ContractRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import tn.esprit.SmartMeet.DAO.Repositories.SponsoringOfferRepository;
 import tn.esprit.SmartMeet.DAO.Entities.OfferStatus;
 import tn.esprit.SmartMeet.DAO.Entities.SponsoringOffer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class SponsoringOfferService {
@@ -25,7 +20,8 @@ public class SponsoringOfferService {
     private SponsoringOfferRepository sponsoringOfferRepository;
     @Autowired
     private ContractService contractService;
-
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private EventRepository eventRepository;
@@ -114,10 +110,8 @@ public class SponsoringOfferService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
 
-        // Mise à jour BIDIRECTIONNELLE
         offer.setEventId(eventId);
 
-        // Sauvegarde SYNCHRONE (flush immédiat)
         sponsoringOfferRepository.save(offer);
 
 
@@ -126,5 +120,20 @@ public class SponsoringOfferService {
 
         return offer;
     }
+    public Map<String, Object> getRecommendation(double offerAmount) {
+        String url = "http://localhost:5000/recommend";
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("offer_amount", offerAmount);
 
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestBody, Map.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Erreur lors de la récupération de la recommandation");
+            }
+        } catch (RestClientException e) {
+            throw new RuntimeException("Service de recommandation indisponible", e);
+        }
+    }
 }

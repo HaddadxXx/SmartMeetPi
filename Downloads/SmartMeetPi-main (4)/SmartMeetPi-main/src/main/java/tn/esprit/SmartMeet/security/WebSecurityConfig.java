@@ -1,6 +1,7 @@
 package tn.esprit.SmartMeet.security;
 
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
 import org.springframework.context.annotation.Bean;
@@ -69,7 +70,10 @@ public class WebSecurityConfig {
   public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
     return authConfig.getAuthenticationManager();
   }
-
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
+  }
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();

@@ -1,7 +1,5 @@
 package tn.esprit.SmartMeet.RestControllers;
-import tn.esprit.SmartMeet.DAO.Entities.Event;
 import tn.esprit.SmartMeet.DAO.Entities.SponsoringOffer;
-import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.SponsoringOfferRepository;
 import tn.esprit.SmartMeet.Services.serviceIslem.ContractService;
 import tn.esprit.SmartMeet.Services.serviceIslem.SponsoringOfferService;
@@ -12,9 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 
@@ -67,6 +64,35 @@ public class SponsoringOfferController {
         service.addEventToSponsoringOffer(offerId, eventId);
         contractService.checkAndGenerateContract(eventId, offerId); // Appel après la transaction
         return ResponseEntity.ok("Événement associé à l’offre et contrat généré !");
+    }
+    @GetMapping("/{id}/recommend-event")
+    public ResponseEntity<?> recommendEvent(@PathVariable String id) {
+        SponsoringOffer offer = service.getOfferById(id);
+        if (offer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            Map<String, Object> recommendation = service.getRecommendation(offer.getAmount());
+            if (recommendation != null && recommendation.containsKey("id")) {
+                String eventId = recommendation.get("id").toString();
+
+                // Mettre à jour l'offre avec l'ID de l'événement recommandé
+                offer.setEventId(eventId);
+                sponsoringOfferRepository.save(offer);
+
+
+
+                // Régénérer la réponse avec les IDs mis à jour
+                recommendation.put("offerId", offer.getId());
+                recommendation.put("eventId", eventId);
+            }
+
+
+            return ResponseEntity.ok(recommendation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("Service de recommandation indisponible: " + e.getMessage());
+        }
     }
 }
 

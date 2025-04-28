@@ -1,30 +1,16 @@
 package tn.esprit.SmartMeet.Services.serviceIslem;
 
-import com.itextpdf.layout.properties.TextAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.SmartMeet.DAO.Entities.Contract;
-import tn.esprit.SmartMeet.DAO.Entities.Event;
 import tn.esprit.SmartMeet.DAO.Entities.SponsoringOffer;
 import tn.esprit.SmartMeet.DAO.Repositories.ContractRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.SponsoringOfferRepository;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class ContractService {
@@ -68,7 +54,7 @@ public class ContractService {
                 Contract contract = new Contract();
                 contract.setEventId(eventId);
                 contract.setSponsoringOfferId(offerId);
-                contract.setTitle("Contrat entre " + event.getName() + " et " + offer.getTitle());
+                contract.setTitle("Contrat entre " + event.getNonEvent() + " et " + offer.getTitle());
                 contract.setAmount(offer.getAmount());
                 contract.setCreationDate(new Date());
 
