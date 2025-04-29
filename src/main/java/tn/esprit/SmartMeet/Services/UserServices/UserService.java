@@ -23,7 +23,7 @@ public class UserService implements IUserService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
 
-    private final String UPLOAD_DIRECTORY = "uploads/profilimages/";
+    private final String UPLOAD_DIRECTORY = "uploads/";
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;

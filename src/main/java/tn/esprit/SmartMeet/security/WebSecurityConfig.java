@@ -88,6 +88,11 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/auth/**").permitAll()
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/uploads/**").permitAll()
+                    .requestMatchers("/api/uploads/profilimages/**").permitAll()
+                    .requestMatchers("/uploads/profilimages/**").permitAll()
+
+
+
                     .requestMatchers("/api/users/me").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
