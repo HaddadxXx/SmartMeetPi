@@ -88,13 +88,21 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/uploads/**").permitAll()
                     .requestMatchers("/api/uploads/profilimages/**").permitAll()
                     .requestMatchers("/uploads/profilimages/**").permitAll()
-
-
-
+                    .requestMatchers("/api/events/addEvenement").permitAll()
+                    .requestMatchers("/events/**").permitAll()
+                    .requestMatchers("/events/test").permitAll()
+                    .requestMatchers("/events/paginated").permitAll()
+                    .requestMatchers("/events/create").permitAll()
+                    .requestMatchers("/events/lancerMeetPourEvent/{eventId}").permitAll()
+                    .requestMatchers("/events/createEventWithMeetLink").permitAll()
+                    .requestMatchers("/events/callback", "/events/oauth2/**").permitAll()
+                    .requestMatchers("/Session/**").permitAll()
                     .requestMatchers("/api/users/me").permitAll()
+                    .requestMatchers("/events/getParticipantsEmails/{eventId}").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
                     .requestMatchers("/api/friends/**").permitAll()          // Ajout pour tester la liste d'amis
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
                     //.requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
