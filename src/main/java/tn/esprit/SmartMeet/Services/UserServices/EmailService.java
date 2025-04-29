@@ -1,9 +1,15 @@
 package tn.esprit.SmartMeet.Services.UserServices;
+import io.jsonwebtoken.io.IOException;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -66,6 +72,24 @@ public class EmailService {
 
         return verificationCodes.get(email).equals(code.trim());
     }
+/// /////////
+   /* public void envoyerQRCodeParEmail(String destinataire, String codeQRbase64) {
+        MimeMessage message = mailSender.createMimeMessage();
 
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setTo(destinataire);
+            helper.setSubject("Votre badge numérique");
+            helper.setText("<p>Voici votre badge numérique avec code QR :</p><img src='cid:qrcodeImage'>", true);
 
+            byte[] imageBytes = Base64.getDecoder().decode(codeQRbase64.split(",")[1]);
+            ByteArrayDataSource imageSource = new ByteArrayDataSource(imageBytes, "image/png");
+            helper.addInline("qrcodeImage", imageSource);
+
+            mailSender.send(message);
+
+        } catch (MessagingException | IOException e) {
+            e.printStackTrace();
+        }
+    }*/
 }

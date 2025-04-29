@@ -1,6 +1,8 @@
 package tn.esprit.SmartMeet.security;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
 import org.springframework.context.annotation.Bean;
@@ -93,6 +95,17 @@ public class WebSecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
                     //.requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
+                    /// ////
+                    .requestMatchers("/api/events/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/api/transports/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/api/sessions/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible.requestMatchers("/api/ressources/**").permitAll() // ✅ Rendre accessible
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                    .requestMatchers("/api/weather/**").permitAll()
+                    .requestMatchers("/api/badgeNumerique/**").permitAll() //
+                    .requestMatchers("/api/inscriptions/**").permitAll() // // ✅ Rendre accessible
+                    /// /////
+
                     .anyRequest().authenticated());
     http.cors(cors -> cors.configurationSource(request -> {
       org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();
@@ -112,6 +125,11 @@ public class WebSecurityConfig {
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
+  }
+
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
   }
 
 }
