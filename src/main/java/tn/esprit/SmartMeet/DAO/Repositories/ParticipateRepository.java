@@ -13,5 +13,10 @@ public interface ParticipateRepository extends MongoRepository<Participate , Str
 
     List<Participate> findByEvent_IdEvent(String eventId);
 
-    List<Participate> findByEvent_User_Id(String userId);
+   // List<Participate> findByEventId(String eventId);
+
+    //   List<Participate> findByEvent_User_Id(String userId);
+
+
+ //   List<Participate> findByEventId(String eventId);
 }

@@ -12,7 +12,7 @@ public interface EventRepository extends MongoRepository< Event, String> {
 
     Event findByNomEvent(String eventName);
 
-    Event findByIdEvent(String eventId);
+   // Event findByIdEvent(String eventId);
 
    // List<Event> findByOwnerId(String ownerId);
 }

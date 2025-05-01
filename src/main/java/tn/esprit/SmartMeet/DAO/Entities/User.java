@@ -158,11 +158,8 @@ public class User {
   }
 
   @DBRef
-  @JsonIgnore // Empêche la sérialisation de la liste des événements dans l'entité User
-  private List<Event> events;  // Liste des événements auxquels l'utilisateur participe
-
-
-
+  @JsonIgnore
+  private List<Event> events;
   @DBRef
   private Set<Group> groups = new HashSet<>(); // Liste des groupes où l'utilisateur est membre
 
@@ -174,5 +171,9 @@ public class User {
   public void leaveGroup(Group group) {
     this.groups.remove(group);
   }
+  @DBRef
+  @JsonIgnore
+  private List<Participate> participations;
+
 }
 

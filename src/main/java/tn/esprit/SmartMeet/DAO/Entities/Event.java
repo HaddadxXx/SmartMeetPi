@@ -13,7 +13,9 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Document
 @Data// Génère les getters, setters, toString, etc.
@@ -55,6 +57,8 @@ public class Event {
     @DBRef
     private List<Session> sessions;
 
+
+    @DBRef
     @JsonIgnore
     private User user ;
 
@@ -69,16 +73,21 @@ public class Event {
     public void setConferenceData(ConferenceData conferenceData) {
     }
 
-    public Group setSummary(String summary) {
+/*    public Group setSummary(String summary) {
         return null;
-    }
+    }*/
 
-    public List<User> getParticipants() {
-        return  getParticipants() ;
-    }
+   /* public List<User> getParticipants() {
+        if (participations == null) return List.of();
+        return participations.stream()
+                .map(Participate::getUser)
+                .collect(Collectors.toList());
+    }*/
 
-    @DBRef  // Cette annotation permet d'utiliser une référence vers un autre document dans MongoDB
-    @JsonIgnore  // Permet de sérialiser la relation de l'événement vers les utilisateurs
-    private List<User> participants;
+    @DBRef
+    @JsonIgnore
+    private List<Participate> participations;
+
+
 }
 

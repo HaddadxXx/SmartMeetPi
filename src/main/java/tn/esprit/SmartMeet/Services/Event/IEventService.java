@@ -5,7 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.*;
 
+import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 public interface IEventService {
 
@@ -23,10 +25,14 @@ public interface IEventService {
     User getUserByOwnerEvent(String eventId);
     Participate participateToEvent(String email, String eventId, MultipartFile file);
    // Participate participateToEvent(String email, String eventId) ;
-   public void afficherParticipantsParCreateur(String userId);
+  // public void afficherParticipantsParCreateur(String userId);
     Event createEventWithMeetLink(MeetingRequest request, MultipartFile file)throws Exception;
 
     public String lancerMeetPourEvent(String eventId) ;
 
-    List<String> getParticipantsEmails(String eventId);
+   // List<String> getParticipantsEmails(String eventId);
+    public Map<String, Object> analyzeFileWithAI(File file, String theme);
+    public List<String> getParticipantsEmailsByEventId(String eventId);
+    void sendEmailToParticipants(String eventId);
+
 }

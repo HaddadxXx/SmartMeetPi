@@ -14,13 +14,25 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.ConferenceData;
 import com.google.api.services.calendar.model.CreateConferenceRequest;
 import com.google.api.services.calendar.model.EventDateTime;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.*;
 
@@ -36,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.google.api.client.json.JsonFactory;
+import tn.esprit.SmartMeet.Services.UserServices.RahmaMailService;
 import tn.esprit.SmartMeet.Utils.GoogleAuthorizeUtil;
 import com.google.api.services.calendar.model.EntryPoint;
 
@@ -50,6 +63,7 @@ import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -57,6 +71,11 @@ import java.util.stream.Collectors;
 @CrossOrigin
 @Service
 public class EventService implements IEventService {
+    private JavaMailSender mailSender;
+    @Autowired
+    private RahmaMailService rahmaMailService;
+
+    private EventService eventService;
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
@@ -229,51 +248,7 @@ public class EventService implements IEventService {
 
          return participateRepository.save(participate);
      }*/
-/*   public Participate participateToEvent(String email, String eventId, MultipartFile file) {
-       User user = userRepository.findByEmail(email)
-               .orElseThrow(() -> new RuntimeException("User not found"));
 
-       Event event = eventRepository.findById(eventId)
-               .orElseThrow(() -> new RuntimeException("Event not found"));
-
-       Participate participate = new Participate();
-       participate.setUser(user);
-       participate.setEvent(event);
-       participate.setDateOfParticpation(LocalDate.now());
-
-       if (file != null && !file.isEmpty()) {
-           try {
-               // ✅ Chemin absolu dynamique vers le dossier "uploads/participation" dans le projet
-               String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator ;
-
-               File uploadPath = new File(uploadDir);
-               if (!uploadPath.exists()) {
-                   boolean created = uploadPath.mkdirs();
-                   if (!created) {
-                       throw new RuntimeException("Could not create upload directory: " + uploadDir);
-                   }
-               }
-
-               // ✅ Nom unique
-               String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-               // ✅ Destination complète
-               File destinationFile = new File(uploadPath, fileName);
-               file.transferTo(destinationFile);
-
-               System.out.println("Fichier reçu : " + file.getOriginalFilename());
-
-               // ✅ Chemin relatif stocké
-               participate.setFilePath("uploads/" + fileName);
-
-           } catch (IOException e) {
-               throw new RuntimeException("Error while uploading file: " + e.getMessage());
-           }
-       }
-
-       return participateRepository.save(participate);
-   }
-*/
     public Participate participateToEvent(String email, String eventId, MultipartFile file) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -382,7 +357,7 @@ public class EventService implements IEventService {
     }
 
 
-    public void afficherParticipantsParCreateur(String userId) {
+ /*   public void afficherParticipantsParCreateur(String userId) {
         List<Participate> participations = participateRepository.findByEvent_User_Id(userId);
 
         for (Participate p : participations) {
@@ -397,21 +372,21 @@ public class EventService implements IEventService {
         }
 
 
-    }
+    }*/
 
     @Override
     public String lancerMeetPourEvent(String eventId) {
         try {
-            // 1. Chercher l'événement MongoDB
+            // 1. Chercher l'événement
             tn.esprit.SmartMeet.DAO.Entities.Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Événement introuvable avec l'ID: " + eventId));
 
-            // 2. Vérifier si c'est bien un événement en ligne
+            // 2. Vérifier le type
             if (event.getTypeEvent() != TypeEvent.ENLIGNE) {
                 throw new RuntimeException("Seuls les événements en ligne peuvent lancer un Google Meet.");
             }
 
-            // 3. Se connecter à Google Calendar
+            // 3. Connexion Google Calendar
             Credential credential = GoogleAuthorizeUtil.authorize();
             Calendar service = new Calendar.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -419,7 +394,7 @@ public class EventService implements IEventService {
                     credential
             ).setApplicationName("My App").build();
 
-            // 4. Créer l'événement Google Calendar
+            // 4. Créer l’événement
             com.google.api.services.calendar.model.Event googleEvent = new com.google.api.services.calendar.model.Event()
                     .setSummary(event.getNomEvent())
                     .setDescription(event.getDescription())
@@ -435,14 +410,22 @@ public class EventService implements IEventService {
                     .setConferenceDataVersion(1)
                     .execute();
 
-            // 5. Récupérer le lien Meet
+            // 5. Récupérer le lien
             String meetLink = googleEvent.getHangoutLink();
 
-            // 6. Sauvegarder le lien dans l'événement MongoDB
+            // 6. Sauvegarder dans Mongo
             event.setMeetLink(meetLink);
             eventRepository.save(event);
 
-            // 7. Retourner le lien
+            // 7. Envoyer le mail via RahmaMailService
+            List<String> emails = getParticipantsEmailsByEventId(eventId);
+            for (String to : emails) {
+                String sujet = "📢 Lien de participation à l’événement : " + event.getNomEvent();
+                String corps = "Bonjour,\n\nVoici le lien Google Meet pour participer à l’événement « "
+                        + event.getNomEvent() + " » :\n\n" + meetLink + "\n\nÀ bientôt sur SmartMeet !";
+                rahmaMailService.envoyerMail(to, sujet, corps);
+            }
+
             return meetLink;
 
         } catch (Exception e) {
@@ -450,20 +433,81 @@ public class EventService implements IEventService {
         }
     }
 
-    @Override
-    public List<String> getParticipantsEmails(String eventId) {
-        try {
-            System.out.println("Recherche des participants pour l'eventId : " + eventId);
-            Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Événement non trouvé"));
-            System.out.println("Événement trouvé : " + event.getNomEvent());
-            return event.getParticipants().stream()
-                    .map(User::getEmail)
-                    .collect(Collectors.toList());
 
-        } catch (Exception e) {
-            System.out.println("Erreur : " + e.getMessage());
-            throw e;
+    @Override
+    public Map<String, Object> analyzeFileWithAI(File file, String theme) {
+        String flaskUrl = "http://localhost:5000/analyze";
+
+        // Créer la requête multipart
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("theme", theme);
+        body.add("file", new FileSystemResource(file));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(flaskUrl, requestEntity, Map.class);
+        return response.getBody();
+    }
+
+    @Override
+    public List<String> getParticipantsEmailsByEventId(String eventId) {
+        List<Participate> participations = participateRepository.findByEvent_IdEvent(eventId);
+        return participations.stream()
+                .filter(p -> p.getUser() != null) // filtre les participations invalides
+                .map(p -> p.getUser().getEmail())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void sendEmailToParticipants(String eventId) {
+        // Récupérer l'événement
+        Event event = eventRepository.findById(eventId).orElse(null);
+
+        if (event == null) {
+            System.err.println("Événement introuvable pour l'ID : " + eventId);
+            return;
         }
+
+        // Récupérer les e-mails des participants
+        List<Participate> participations = participateRepository.findByEvent_IdEvent(eventId);
+        List<String> recipients = participations.stream()
+                .filter(p -> p.getUser() != null && p.getUser().getEmail() != null)
+                .map(p -> p.getUser().getEmail())
+                .collect(Collectors.toList());
+
+        // Contenu du mail personnalisé
+        String subject = "📢 Merci pour votre participation à SmartMeet !";
+        String body = "Bonjour,\n\nMerci d'avoir participé à notre événement \"" + event.getNomEvent() + "\".\n\nÀ bientôt sur SmartMeet !";
+
+        for (String email : recipients) {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setTo(email);
+                message.setSubject(subject);
+                message.setText(body);
+                mailSender.send(message);
+                System.out.println("E-mail envoyé à : " + email);
+            } catch (Exception e) {
+                System.err.println("Erreur lors de l'envoi de l'e-mail à : " + email);
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+    @PostConstruct
+    public void testMail() {
+        rahmaMailService.envoyerMail(
+                "sarra.afli@esprit.tn",
+                "Test d'envoi",
+                "Ceci est un test d'email depuis SmartMeet"
+        );
     }
 }
 

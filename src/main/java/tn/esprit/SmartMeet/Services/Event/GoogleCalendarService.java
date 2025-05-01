@@ -1,5 +1,4 @@
 package tn.esprit.SmartMeet.Services.Event;
-import com.google.api.services.calendar.model.EntryPoint;
 import com.google.api.services.calendar.model.Event;
 import tn.esprit.SmartMeet.DAO.Entities.MeetingRequest;
 import tn.esprit.SmartMeet.DAO.Entities.TypeEvent;
@@ -10,14 +9,14 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.GenericUrl;
+
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.ConferenceData;
-import com.google.api.services.calendar.model.ConferenceSolutionKey;
+
 import com.google.api.services.calendar.model.CreateConferenceRequest;
 import com.google.api.services.calendar.model.EventDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +25,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
 import tn.esprit.SmartMeet.Utils.GoogleAuthorizeUtil;
 //import tn.esprit.SmartMeet.DAO.Entities.Event;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -75,44 +71,12 @@ public class GoogleCalendarService {
                 .setAccessType("offline")
                 .build();
 
-        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver.Builder().setPort(8888).build())
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver.Builder().setPort(8889).build())
                 .authorize("user");
     }
 
 
 
-   /* public String createEventWithMeet(String title, String description, String start, String end)
-            throws Exception {
-
-        Credential credential = GoogleAuthorizeUtil.authorize(); // tu dois avoir cette méthode
-
-        Calendar service = new Calendar.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                JacksonFactory.getDefaultInstance(),
-                credential
-        ).setApplicationName("My App").build();
-
-        Event event = new Event()
-                .setSummary(title)
-                .setDescription(description);
-
-        event.setStart(new EventDateTime().setDateTime(new DateTime(start)));
-        event.setEnd(new EventDateTime().setDateTime(new DateTime(end)));
-
-        // Ajouter le Google Meet
-        CreateConferenceRequest conferenceRequest = new CreateConferenceRequest()
-                .setRequestId(UUID.randomUUID().toString());
-        ConferenceData conferenceData = new ConferenceData()
-                .setCreateRequest(conferenceRequest);
-        event.setConferenceData(conferenceData);
-
-        // Insérer l’événement
-        event = service.events().insert("primary", event)
-                .setConferenceDataVersion(1)
-                .execute();
-
-        return event.getHangoutLink(); // Le lien Google Meet
-    }*/
 
 
  public String createEventWithMeet(MeetingRequest request) throws Exception {

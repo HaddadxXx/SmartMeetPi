@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 @Document(collection = "Participate ")
-@Data  // Génère les getters, setters, toString, etc.
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -24,9 +24,12 @@ public class Participate {
     private String filePath;
 
     @DBRef
+    @JsonIgnore
     private User user;
 
+
     @DBRef
+    @JsonIgnore
     private Event event;
 
     private LocalDate dateOfParticpation ;

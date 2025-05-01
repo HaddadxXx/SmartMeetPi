@@ -41,7 +41,7 @@ public class GoogleAuthorizeUtil {
                 .setAccessType("offline")
                 .build();
 
-        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver.Builder().setPort(8888).build())
+        return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver.Builder().setPort(8889).build())
                 .authorize("user");
     }
 }
