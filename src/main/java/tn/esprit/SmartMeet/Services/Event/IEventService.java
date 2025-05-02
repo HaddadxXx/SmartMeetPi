@@ -33,6 +33,9 @@ public interface IEventService {
    // List<String> getParticipantsEmails(String eventId);
     public Map<String, Object> analyzeFileWithAI(File file, String theme);
     public List<String> getParticipantsEmailsByEventId(String eventId);
-    void sendEmailToParticipants(String eventId);
+  //  void sendEmailToParticipants(String eventId);
+    Event getEvenementTendance() ;
+    User getCurrentUser(String email);
+
 
 }

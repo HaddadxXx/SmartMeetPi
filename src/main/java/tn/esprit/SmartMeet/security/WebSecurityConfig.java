@@ -110,6 +110,7 @@ public class WebSecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
                     //.requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/test/protected").authenticated()
+                    .requestMatchers("/events/getCurrentUser").authenticated()
                     .anyRequest().authenticated());
     http.cors(cors -> cors.configurationSource(request -> {
       org.springframework.web.cors.CorsConfiguration config = new org.springframework.web.cors.CorsConfiguration();

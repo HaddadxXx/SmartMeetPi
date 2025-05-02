@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 public class RahmaMailService {
     @Autowired
-    @Qualifier("rahmaMailSender")
     private JavaMailSender mailSender;
 
     public void envoyerMail(String to, String sujet, String corps) {

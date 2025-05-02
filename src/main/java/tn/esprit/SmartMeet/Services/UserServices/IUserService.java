@@ -12,4 +12,5 @@ public interface IUserService {
 
     boolean deleteUserByEmail(String email, String password);
     public List<User> searchPotentialFriends(String userId, String keyword);
+
 }

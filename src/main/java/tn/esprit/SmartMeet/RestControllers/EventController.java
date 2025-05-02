@@ -5,6 +5,7 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Events;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.*;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,31 +45,32 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
-    private final IEventService iEventService ;
-private IUserService iUserService;
+    private final IEventService iEventService;
+    private IUserService iUserService;
 
     public EventController(IEventService iEventService, GoogleCalendarService googleCalendarService) {
         this.iEventService = iEventService;
         this.googleCalendarService = googleCalendarService;
     }
 
-    @PostMapping("/addEvenement")
-    public ResponseEntity<?> addEvenement (@RequestPart("event") Event event,
-                                           @RequestPart("file") MultipartFile file ) {
-        Event savedEvent = iEventService.addEvenement(event, file );
-        System.out.println("ownerid "+ event.getOwnerId() + "event creeé"+event.getNomEvent());
+   @PostMapping("/addEvenement")
+    public ResponseEntity<?> addEvenement(@RequestPart("event") Event event,
+                                          @RequestPart(value = "file", required = false) MultipartFile file ){
+        Event savedEvent = iEventService.addEvenement(event, file);
+        System.out.println("ownerid " + event.getOwnerId() + "event creeé" + event.getNomEvent());
         return ResponseEntity.ok(savedEvent);
     }
-  /* @PostMapping("/addEvenement")
-   public ResponseEntity<?> addEvenement(
-           @RequestPart("event") Event event,
-           @RequestPart("file") MultipartFile file,
-           @RequestParam("userId") String userId) {
 
-       Event savedEvent = iEventService.addEvenement(event, file, userId);
-       return ResponseEntity.ok(savedEvent);
-   }*/
 
+
+
+  /*@PostMapping(value = "/addEvenement", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<Event> addEvenement(
+          @RequestPart("evenement") Event evenement,
+          @RequestPart("file") MultipartFile file) {
+      Event savedEvent = eventService.addEvenement(evenement, file);
+      return ResponseEntity.ok(savedEvent);
+  }*/
 
 
     @GetMapping("/getAllEvents")
@@ -81,16 +85,15 @@ private IUserService iUserService;
     }
 
 
-
     @PutMapping("/{id}")
-    public Event updateEvent(@PathVariable String id,@RequestBody Event event){
+    public Event updateEvent(@PathVariable String id, @RequestBody Event event) {
         System.out.println("Event reçu: " + event);  // ✅ Debug ici
         System.out.println("Capacité reçue: " + event.getCapacite()); // ✅ Debug ici
-        return iEventService.updateEvent(id,event);
+        return iEventService.updateEvent(id, event);
     }
 
     @PostMapping("/ajouterSessionEtAffecterAEvenement/{eventName}")
-    public Session ajouterSessionEtAffecterAEvenement(@RequestBody Session session, @PathVariable String eventName){
+    public Session ajouterSessionEtAffecterAEvenement(@RequestBody Session session, @PathVariable String eventName) {
         System.out.println("Nom de l'événement reçu : " + eventName);
         return iEventService.ajouterSessionEtAffecterAEvenement(session, eventName);
     }
@@ -123,15 +126,8 @@ private IUserService iUserService;
         }
     }
 
-  /*  @GetMapping("/getEventsByOwner/{ownerId}")
-    public List<Event> getEventsByOwner( String ownerId){
-       return iEventService.getEventsByOwner(ownerId);
-    }*/
-
-
 
     private final GoogleCalendarService googleCalendarService;
-
 
 
     @GetMapping("/test")
@@ -164,45 +160,17 @@ private IUserService iUserService;
         }
     }
 
-  /*  @PostMapping("/createMeetEvent")
-    public String createMeetEvent(@RequestParam String summary,
-                                  @RequestParam String description,
-                                  @RequestParam String startDateTime,
-                                  @RequestParam String endDateTime,
-                                  @RequestParam String timeZone) {
-        try {
-            // Appel de la méthode pour créer l'événement avec le lien Meet
-            return googleCalendarService.createEventWithMeetLink(summary, description, startDateTime, endDateTime, timeZone);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Erreur lors de la création de l'événement : " + e.getMessage();
-        }
-    }*/
 
-/*    @PostMapping("/create")
-    public ResponseEntity<String>createEventWithMeet(@RequestBody MeetingRequest request) {
+    @PostMapping("/create")
+    public ResponseEntity<String> createEventWithMeet(@RequestBody MeetingRequest request) {
         try {
-            String meetLink = googleCalendarService.createEventWithMeet(
-                    request.getTitle(),
-                    request.getDescription(),
-                    request.getStartDateTime(),
-                    request.getEndDateTime()
-            );
+            String meetLink = googleCalendarService.createEventWithMeet(request);
             return ResponseEntity.ok(meetLink);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erreur lors de la création : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur : " + e.getMessage());
         }
-    }*/
-@PostMapping("/create")
-public ResponseEntity<String> createEventWithMeet(@RequestBody MeetingRequest request) {
-    try {
-        String meetLink = googleCalendarService.createEventWithMeet(request);
-        return ResponseEntity.ok(meetLink);
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Erreur : " + e.getMessage());
     }
-}
 
 
     @GetMapping("/callback")
@@ -221,74 +189,25 @@ public ResponseEntity<String> createEventWithMeet(@RequestBody MeetingRequest re
     }
 
 
-  /*  @PostMapping("/participate")
-    public ResponseEntity<?> participate(
+    @PostMapping(value = "/participateToEvent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> participateToEvent(
             @RequestParam String email,
-            @RequestParam String eventId) {
+            @RequestParam String eventId,
+            @RequestPart(required = false) MultipartFile file) {
 
-        Participate result = iEventService.participateToEvent(email, eventId);
-
-        // ✅ On récupère l'utilisateur depuis l'objet result
-        if (result.getUser() != null) {
-            System.out.println("User ID: " + result.getUser().getId());
-        } else {
-            System.out.println("User is null.");
-        }
-
+        Participate result = iEventService.participateToEvent(email, eventId, file);
         return ResponseEntity.ok(result);
-    }*/
- @PostMapping(value = "/participateToEvent", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<?> participateToEvent(
-          @RequestParam String email,
-          @RequestParam String eventId,
-          @RequestPart(required = false) MultipartFile file) {
-
-      Participate result = iEventService.participateToEvent(email, eventId, file);
-      return ResponseEntity.ok(result);
-  }
-
-   /* @GetMapping("/ afficherParticipantsParCreateur/{userId}")
-    public void afficherParticipantsParCreateur(@PathVariable String userId) {
-        iEventService.afficherParticipantsParCreateur(userId);
-    }*/
-
-
+    }
 
 
     @PostMapping("/createEventWithMeetLink")
     public ResponseEntity<Event> createEventWithMeetLink(@RequestBody MeetingRequest meetingRequest,
-                                                         @RequestPart("file") MultipartFile file ) throws Exception {
+                                                         @RequestPart("file") MultipartFile file) throws Exception {
 
         Event event = iEventService.createEventWithMeetLink(meetingRequest, file);
         return new ResponseEntity<>(event, HttpStatus.CREATED);
 
     }
-
-
-
-
-   /* @PostMapping("/lancerMeetPourEvent/{eventId}")
-    public ResponseEntity<Map<String, String>> lancerMeetPourEvent(@PathVariable String eventId) {
-        // Création du lien Google Meet pour l'événement
-        String meetLink = iEventService.lancerMeetPourEvent(eventId);
-
-        // Création de la réponse JSON
-        Map<String, String> response = new HashMap<>();
-        response.put("link", meetLink);  // Ajouter le lien dans le JSON
-
-        // Retourne un objet JSON avec le lien de la réunion
-        return ResponseEntity.ok(response);
-    }*/
-  /*  @GetMapping("/getParticipantsEmails/{eventId}")
-    public ResponseEntity<List<String>> getParticipantsEmails(@PathVariable String eventId) {
-        try {
-            List<String> emails = iEventService.getParticipantsEmails(eventId);
-            return ResponseEntity.ok(emails);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }*/
-
 
 
     @PostMapping(value = "/analyze", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -312,40 +231,40 @@ public ResponseEntity<String> createEventWithMeet(@RequestBody MeetingRequest re
     }
 
 
+    @PostMapping("/lancerMeetPourEvent/{eventId}")
+    public ResponseEntity<Map<String, String>> lancerMeetPourEvent(@PathVariable String eventId) {
+        String meetLink = eventService.lancerMeetPourEvent(eventId);
 
- /*   @PostMapping("/lancerMeetPourEvent/{eventId}")
-    public ResponseEntity<String> lancerMeetPourEvent(@PathVariable String eventId) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Lien Google Meet généré");
+        response.put("meetLink", meetLink);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/evenement-tendance")
+    public ResponseEntity<Event> getEvenementTendance() {
+        return ResponseEntity.ok(eventService.getEvenementTendance());
+    }
+
+    @PostMapping("/verifier-etat/{eventId}")
+    public ResponseEntity<String> verifierEtatEvenement(@PathVariable String eventId) {
         try {
-            String meetLink = eventService.lancerMeetPourEvent(eventId);
-            return ResponseEntity.ok("Lien Google Meet généré : " + meetLink);
+            iEventService.verifierEtatEvenement(eventId);
+            return ResponseEntity.ok("Événement vérifié avec succès");
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-    }*/
- @PostMapping("/lancerMeetPourEvent/{eventId}")
- public ResponseEntity<Map<String, String>> lancerMeetPourEvent(@PathVariable String eventId) {
-     String meetLink = eventService.lancerMeetPourEvent(eventId);
+    }
 
-     Map<String, String> response = new HashMap<>();
-     response.put("message", "Lien Google Meet généré");
-     response.put("meetLink", meetLink);
-
-     return ResponseEntity.ok(response);
- }
-
-    @Autowired
-    private RahmaMailService rahmaMailService;
-
-    @GetMapping("/events/envoyerMailTest")
-    public String testEmail() {
+    @GetMapping("/getCurrentUser")
+    public ResponseEntity<User> getCurrentUser(Principal principal) {
         try {
-            System.out.println("📧 Tentative d’envoi d’email...");
-            rahmaMailService.envoyerMail("sarra.afli@esprit.tn", "Sujet test", "Contenu test");
-            return "✅ Email envoyé (si pas d’erreur dans la console).";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "❌ Erreur d’envoi : " + e.getMessage();
+            User user = iEventService.getCurrentUser(principal.getName());
+            return ResponseEntity.ok(user);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 }

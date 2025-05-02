@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,14 +28,14 @@ import java.util.stream.Collectors;
 public class Event {
     @Id
     private String idEvent;
-    @NotBlank(message = "the name is required ")
+    //@NotBlank(message = "the name is required ")
     @Size(min = 1 , max = 10)
     @Indexed(unique = true)
     private String nomEvent;
-    @NotBlank(message = "the theme is required ")
+  //  @NotBlank(message = "the theme is required ")
     @Size(min = 1 , max = 10)
     private String theme ;
-    @NotBlank(message = "the theme is required ")
+  //  @NotBlank(message = "the theme is required ")
     @Size(min = 3 , max = 30)
     private String description ;
     
@@ -48,10 +49,9 @@ public class Event {
     private String horaire ;
     private  String lieu  ;
 
-
+    private String ownerId;
     private String photo;
     private String meetLink;
-    private String ownerId;
 
     @JsonIgnore
     @DBRef
@@ -70,8 +70,8 @@ public class Event {
     public void setUser(User user) {
         this.user = user;
     }
-    public void setConferenceData(ConferenceData conferenceData) {
-    }
+ //   public void setConferenceData(ConferenceData conferenceData) {
+ //   }
 
 /*    public Group setSummary(String summary) {
         return null;
@@ -85,9 +85,17 @@ public class Event {
     }*/
 
     @DBRef
-    @JsonIgnore
     private List<Participate> participations;
 
+
+    public Collection<User> getParticipants() {
+        if (participations == null) {
+            return List.of();
+        }
+        return participations.stream()
+                .map(Participate::getUser)  // Récupère les utilisateurs associés aux participations
+                .collect(Collectors.toList());
+    }
 
 }
 

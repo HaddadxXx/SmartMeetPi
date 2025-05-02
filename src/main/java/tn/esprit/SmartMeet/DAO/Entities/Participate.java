@@ -29,7 +29,6 @@ public class Participate {
 
 
     @DBRef
-    @JsonIgnore
     private Event event;
 
     private LocalDate dateOfParticpation ;

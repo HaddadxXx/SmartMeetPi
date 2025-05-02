@@ -27,6 +27,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -61,10 +62,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.security.GeneralSecurityException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequestMapping("/events")
@@ -99,9 +97,14 @@ public class EventService implements IEventService {
                 evenement.setPhoto(filename); // Stocke juste le nom ou le chemin relatif
             }
 
+            // Récupérer l'utilisateur connecté (avec Spring Security)
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String currentUserId = authentication.getName(); // ou autre selon ton système d'authentification
+            String currentUserId = authentication.getName();  // Utilise le nom d'utilisateur ou l'ID
+
+            // Assigner l'ID de l'utilisateur créateur à l'événement
             evenement.setOwnerId(currentUserId);
+
+
             //   System.out.println("Tentative d'ajout dans la base : " + evenement);
             return eventRepository.save(evenement);
 
@@ -175,6 +178,8 @@ public class EventService implements IEventService {
             throw new RuntimeException("Aucun événement trouvé avec le nom : " + eventName);
         }
 
+        // Lier la session à l'événement
+        session.setEvenement(nomEvent);
 
         // Sauvegarder la session si elle n'existe pas encore
         session = sessionRepository.save(session);
@@ -234,20 +239,7 @@ public class EventService implements IEventService {
         return eventRepository.findAll(pageable);
     }
 
-    /* public Participate participateToEvent(String email, String eventId) {
-         User user = userRepository.findByEmail(email)
-                 .orElseThrow(() -> new RuntimeException("User not found"));
-         Event event = eventRepository.findById(eventId)
-                 .orElseThrow(() -> new RuntimeException("Event not found"));
-         // Affichage de l'id utilisateur dans la console
-       //  System.out.println("User ID: " + user.getId());
-         Participate participate = new Participate();
-         participate.setUser(user);
-         participate.setEvent(event);
-         participate.setDateOfParticpation(LocalDate.now());
 
-         return participateRepository.save(participate);
-     }*/
 
     public Participate participateToEvent(String email, String eventId, MultipartFile file) {
         User user = userRepository.findByEmail(email)
@@ -357,22 +349,7 @@ public class EventService implements IEventService {
     }
 
 
- /*   public void afficherParticipantsParCreateur(String userId) {
-        List<Participate> participations = participateRepository.findByEvent_User_Id(userId);
 
-        for (Participate p : participations) {
-            String participantName = p.getUser().getFirstName() + " " + p.getUser().getLastName();
-            String eventName = p.getEvent().getNomEvent();
-            String eventOwner = p.getEvent().getUser().getFirstName() + " " + p.getEvent().getUser().getLastName();
-
-            System.out.println("Participant : " + participantName);
-            System.out.println("Événement : " + eventName);
-            System.out.println("Créé par : " + eventOwner);
-            System.out.println("-------------------------------");
-        }
-
-
-    }*/
 
     @Override
     public String lancerMeetPourEvent(String eventId) {
@@ -463,52 +440,37 @@ public class EventService implements IEventService {
                 .collect(Collectors.toList());
     }
 
+
+
+
+
+
     @Override
-    public void sendEmailToParticipants(String eventId) {
-        // Récupérer l'événement
-        Event event = eventRepository.findById(eventId).orElse(null);
+    public Event getEvenementTendance() {
+        List<Event> events = eventRepository.findAll();
 
-        if (event == null) {
-            System.err.println("Événement introuvable pour l'ID : " + eventId);
-            return;
-        }
+        Event bestEvent = null;
+        int max = 0;
 
-        // Récupérer les e-mails des participants
-        List<Participate> participations = participateRepository.findByEvent_IdEvent(eventId);
-        List<String> recipients = participations.stream()
-                .filter(p -> p.getUser() != null && p.getUser().getEmail() != null)
-                .map(p -> p.getUser().getEmail())
-                .collect(Collectors.toList());
+        for (Event e : events) {
+            List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
 
-        // Contenu du mail personnalisé
-        String subject = "📢 Merci pour votre participation à SmartMeet !";
-        String body = "Bonjour,\n\nMerci d'avoir participé à notre événement \"" + event.getNomEvent() + "\".\n\nÀ bientôt sur SmartMeet !";
-
-        for (String email : recipients) {
-            try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setTo(email);
-                message.setSubject(subject);
-                message.setText(body);
-                mailSender.send(message);
-                System.out.println("E-mail envoyé à : " + email);
-            } catch (Exception e) {
-                System.err.println("Erreur lors de l'envoi de l'e-mail à : " + email);
-                e.printStackTrace();
+            if (participations != null && participations.size() > max) {
+                max = participations.size();
+                bestEvent = e;
+                bestEvent.setParticipations(participations); // remplissage manuel
             }
         }
+
+        return bestEvent;
+    }
+    @Override
+    public User getCurrentUser(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable avec l'email : " + email));
     }
 
 
-
-    @PostConstruct
-    public void testMail() {
-        rahmaMailService.envoyerMail(
-                "sarra.afli@esprit.tn",
-                "Test d'envoi",
-                "Ceci est un test d'email depuis SmartMeet"
-        );
-    }
 }
 
 
