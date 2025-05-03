@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -59,7 +60,6 @@ public class Event {
 
 
     @DBRef
-    @JsonIgnore
     private User user ;
 
 
@@ -97,5 +97,26 @@ public class Event {
                 .collect(Collectors.toList());
     }
 
+    @Transient
+    private int nbParticipations;
+
+    @Transient
+    private int tendanceRank;
+
+    public int getNbParticipations() {
+        return nbParticipations;
+    }
+
+    public void setNbParticipations(int nbParticipations) {
+        this.nbParticipations = nbParticipations;
+    }
+
+    public int getTendanceRank() {
+        return tendanceRank;
+    }
+
+    public void setTendanceRank(int tendanceRank) {
+        this.tendanceRank = tendanceRank;
+    }
 }
 

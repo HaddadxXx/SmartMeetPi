@@ -13,6 +13,7 @@ public interface IEventService {
 
     //void processEventParticipation(String eventId);
     Event addEvenement(Event evenement, MultipartFile file) ;
+
     List<Event> getAllEvents();
     Event getEventById(String id);
     void deleteEvent(String id);
@@ -34,8 +35,7 @@ public interface IEventService {
     public Map<String, Object> analyzeFileWithAI(File file, String theme);
     public List<String> getParticipantsEmailsByEventId(String eventId);
   //  void sendEmailToParticipants(String eventId);
-    Event getEvenementTendance() ;
-    User getCurrentUser(String email);
+    public List<Event> getTop5EvenementsTendance();
 
 
 }

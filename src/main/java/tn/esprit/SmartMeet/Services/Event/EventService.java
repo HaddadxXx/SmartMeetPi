@@ -446,29 +446,33 @@ public class EventService implements IEventService {
 
 
     @Override
-    public Event getEvenementTendance() {
+    public List<Event> getTop5EvenementsTendance() {
         List<Event> events = eventRepository.findAll();
 
-        Event bestEvent = null;
-        int max = 0;
+        // Préparation : compter les participations et trier
+        List<Event> sortedEvents = events.stream()
+                .peek(e -> {
+                    List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
+                    e.setParticipations(participations); // remplissage manuel
+                    e.setNbParticipations(participations != null ? participations.size() : 0); // champ temporaire
+                })
+                .sorted((e1, e2) -> Integer.compare(e2.getNbParticipations(), e1.getNbParticipations())) // tri descendant
+                .limit(5)
+                .collect(Collectors.toList());
 
-        for (Event e : events) {
-            List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
-
-            if (participations != null && participations.size() > max) {
-                max = participations.size();
-                bestEvent = e;
-                bestEvent.setParticipations(participations); // remplissage manuel
-            }
+        // Ajout du rang (1 à 5)
+        for (int i = 0; i < sortedEvents.size(); i++) {
+            sortedEvents.get(i).setTendanceRank(i + 1); // champ temporaire
         }
 
-        return bestEvent;
+        return sortedEvents;
     }
-    @Override
+
+   /* @Override
     public User getCurrentUser(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable avec l'email : " + email));
-    }
+    }*/
 
 
 }

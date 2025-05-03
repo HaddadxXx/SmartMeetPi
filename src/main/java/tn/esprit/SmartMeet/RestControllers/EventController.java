@@ -55,15 +55,11 @@ public class EventController {
 
    @PostMapping("/addEvenement")
     public ResponseEntity<?> addEvenement(@RequestPart("event") Event event,
-                                          @RequestPart(value = "file", required = false) MultipartFile file ){
+                                          @RequestPart("file") MultipartFile file) {
         Event savedEvent = iEventService.addEvenement(event, file);
         System.out.println("ownerid " + event.getOwnerId() + "event creeé" + event.getNomEvent());
         return ResponseEntity.ok(savedEvent);
     }
-
-
-
-
   /*@PostMapping(value = "/addEvenement", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<Event> addEvenement(
           @RequestPart("evenement") Event evenement,
@@ -243,10 +239,10 @@ public class EventController {
     }
 
 
-    @GetMapping("/evenement-tendance")
+ /*   @GetMapping("/evenement-tendance")
     public ResponseEntity<Event> getEvenementTendance() {
         return ResponseEntity.ok(eventService.getEvenementTendance());
-    }
+    }*/
 
     @PostMapping("/verifier-etat/{eventId}")
     public ResponseEntity<String> verifierEtatEvenement(@PathVariable String eventId) {
@@ -258,7 +254,7 @@ public class EventController {
         }
     }
 
-    @GetMapping("/getCurrentUser")
+  /*  @GetMapping("/getCurrentUser")
     public ResponseEntity<User> getCurrentUser(Principal principal) {
         try {
             User user = iEventService.getCurrentUser(principal.getName());
@@ -266,5 +262,10 @@ public class EventController {
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-    }
+    }*/
+  @GetMapping("/events/tendance")
+  public ResponseEntity<List<Event>> getTop5EvenementsTendance() {
+      List<Event> topEvents = eventService.getTop5EvenementsTendance();
+      return ResponseEntity.ok(topEvents);
+  }
 }
