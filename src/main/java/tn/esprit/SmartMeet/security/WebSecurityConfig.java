@@ -95,6 +95,7 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/auth/send-otp").permitAll()
                     .requestMatchers( "/api/auth/verify-otp").permitAll()// ✅ Autoriser OTP sans auth
                     .requestMatchers("/api/auth/**").permitAll()
+
                     .requestMatchers("/api/test/**").permitAll()
                     .requestMatchers("/api/uploads/**").permitAll()
                     .requestMatchers("/api/uploads/profilimages/**").permitAll()

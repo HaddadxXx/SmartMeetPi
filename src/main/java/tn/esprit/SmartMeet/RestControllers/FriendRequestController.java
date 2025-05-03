@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/friend-requests")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class FriendRequestController {
     private final FriendRequestService service;
 

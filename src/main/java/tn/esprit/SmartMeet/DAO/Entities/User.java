@@ -41,30 +41,22 @@ public class User {
   private String profilePicture;
   private String expertiseArea;
   private String interests;
+  private String aboutMe;
+
+
+
   private double scoreReputation;
   private boolean isVerified;
+  private String time; // Exemple : "2.40 PM" ou une valeur dynamique
+  private String status; // "online", "offline"
+  private String message; // Dernier message de l'utilisateur (à dynamiser)
+  private Integer count; // Nombre de messages non lus (à dynamiser)
   @DBRef
   private Set<Role> roles = new HashSet<>();
 
 
-  private List<String> sentMessages; // Liste des IDs des messages envoyés
-  private List<String> receivedMessages; // Liste des IDs des messages reçus
 
-  public List<String> getSentMessages() {
-    return sentMessages;
-  }
 
-  public void setSentMessages(List<String> sentMessages) {
-    this.sentMessages = sentMessages;
-  }
-
-  public List<String> getReceivedMessages() {
-    return receivedMessages;
-  }
-
-  public void setReceivedMessages(List<String> receivedMessages) {
-    this.receivedMessages = receivedMessages;
-  }
 
   public String getTime() {
     return time;
@@ -106,10 +98,7 @@ public class User {
     this.groups = groups;
   }
 
-  private String time; // Exemple : "2.40 PM" ou une valeur dynamique
-  private String status; // "online", "offline"
-  private String message; // Dernier message de l'utilisateur (à dynamiser)
-  private Integer count; // Nombre de messages non lus (à dynamiser)
+
 
 
 
@@ -238,5 +227,13 @@ public class User {
 
   public void leaveGroup(Group group) {
     this.groups.remove(group);
+  }
+
+  public String getAboutMe() {
+    return aboutMe;
+  }
+
+  public void setAboutMe(String aboutMe) {
+    this.aboutMe = aboutMe;
   }
 }

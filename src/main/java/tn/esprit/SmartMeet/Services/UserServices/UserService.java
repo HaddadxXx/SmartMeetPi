@@ -77,6 +77,9 @@ public class UserService implements IUserService {
             if (updatedUser.getExpertiseArea() != null && !updatedUser.getExpertiseArea().isEmpty()) {
                 existingUser.setExpertiseArea(updatedUser.getExpertiseArea());
             }
+            if (updatedUser.getAboutMe() != null && !updatedUser.getAboutMe().isEmpty()) {
+                existingUser.setAboutMe(updatedUser.getAboutMe());
+            }
             if (updatedUser.getInterests() != null && !updatedUser.getInterests().isEmpty()) {
                 existingUser.setInterests(updatedUser.getInterests());
             }
