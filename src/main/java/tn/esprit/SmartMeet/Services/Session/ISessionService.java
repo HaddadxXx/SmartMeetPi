@@ -11,6 +11,6 @@ public interface ISessionService {
     Session updateSession(String id, Session updatedSession);
     void deleteSession(String id);
     String assignRessourceToSession(String sessionId, String ressourceId);
-
+    List<Session> getSessionsByRessourceId(String ressourceId);
 }
 
