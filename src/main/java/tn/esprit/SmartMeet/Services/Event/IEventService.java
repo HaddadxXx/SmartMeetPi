@@ -8,16 +8,17 @@ import tn.esprit.SmartMeet.DAO.Entities.*;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface IEventService {
 
     //void processEventParticipation(String eventId);
     Event addEvenement(Event evenement, MultipartFile file) ;
-
     List<Event> getAllEvents();
-    Event getEventById(String id);
+    Optional<Event> getEventById(String id);
     void deleteEvent(String id);
-    Event updateEvent(String id, Event event);
+    public Event updateEvent(String id, Event event, MultipartFile file);
+  // Event updateEvent(String id, Event event);
     public Session ajouterSessionEtAffecterAEvenement(Session session, String eventName);
      void verifierEtatEvenement(String eventId);
     Page<Event> getAllEvents(Pageable pageable);

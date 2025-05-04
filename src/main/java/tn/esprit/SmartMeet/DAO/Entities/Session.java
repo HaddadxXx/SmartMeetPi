@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -31,5 +32,9 @@ public class Session {
     @DBRef
     private Event evenement;
 
+    private String nomEvent;
 
+    public void setNomEvent(String nomEvent) {
+        this.nomEvent = nomEvent; // Implémentation correcte du setter
+    }
 }

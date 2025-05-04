@@ -118,5 +118,8 @@ public class Event {
     public void setTendanceRank(int tendanceRank) {
         this.tendanceRank = tendanceRank;
     }
+
+    private double pourcentageParticipation;
+
 }
 

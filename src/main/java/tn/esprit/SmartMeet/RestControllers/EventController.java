@@ -1,5 +1,7 @@
 package tn.esprit.SmartMeet.RestControllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.Events;
@@ -32,10 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @CrossOrigin
@@ -67,7 +66,15 @@ public class EventController {
       Event savedEvent = eventService.addEvenement(evenement, file);
       return ResponseEntity.ok(savedEvent);
   }*/
+  @PutMapping("/{id}")
+  public ResponseEntity<Event> updateEvent(
+          @PathVariable String id,
+          @RequestPart("event") Event event,
+          @RequestPart(value = "file", required = false) MultipartFile file) {
 
+      Event updatedEvent = iEventService.updateEvent(id, event, file);
+      return ResponseEntity.ok(updatedEvent);
+  }
 
     @GetMapping("/getAllEvents")
     public List<Event> getAllEvents() {
@@ -75,18 +82,38 @@ public class EventController {
     }
 
 
-    @DeleteMapping("/{id}")
+  @DeleteMapping("/{id}")
     public void deleteEvent(@PathVariable String id) {
         iEventService.deleteEvent(id);
     }
+   /* @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateEvent(
+            @PathVariable String id,
+            @RequestPart("event") String eventStr,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
 
+        try {
+            // Log pour débogage
+            System.out.println("Received JSON: " + eventStr);
 
-    @PutMapping("/{id}")
+            ObjectMapper mapper = new ObjectMapper();
+            Event event = mapper.readValue(eventStr, Event.class);
+
+            // Traitement...
+            return ResponseEntity.ok("Succès");
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body("Erreur: " + e.getMessage() + "\nJSON reçu: " + eventStr);
+        }
+    }*/
+/*    @PutMapping("/{id}")
     public Event updateEvent(@PathVariable String id, @RequestBody Event event) {
         System.out.println("Event reçu: " + event);  // ✅ Debug ici
         System.out.println("Capacité reçue: " + event.getCapacite()); // ✅ Debug ici
         return iEventService.updateEvent(id, event);
-    }
+    }*/
+
 
     @PostMapping("/ajouterSessionEtAffecterAEvenement/{eventName}")
     public Session ajouterSessionEtAffecterAEvenement(@RequestBody Session session, @PathVariable String eventName) {
@@ -167,8 +194,11 @@ public class EventController {
                     .body("Erreur : " + e.getMessage());
         }
     }
+    @GetMapping("/getEventById/{id}")
 
-
+    public Optional<Event> getEventById(@PathVariable String id){
+        return iEventService.getEventById(id);
+    }
     @GetMapping("/callback")
     public String handleGoogleCallback() {
         // Ici, tu peux gérer la logique post-auth, ou simplement indiquer que l'autorisation a réussi
@@ -263,9 +293,15 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }*/
-  @GetMapping("/events/tendance")
+  /*@GetMapping("/events/tendance")
   public ResponseEntity<List<Event>> getTop5EvenementsTendance() {
       List<Event> topEvents = eventService.getTop5EvenementsTendance();
       return ResponseEntity.ok(topEvents);
-  }
+  }*/
+
+    @GetMapping("/tendance")
+    public ResponseEntity<List<Event>> getTop5EvenementsTendance() {
+        List<Event> topEvents = eventService.getTop5EvenementsTendance();
+        return ResponseEntity.ok(topEvents);
+    }
 }

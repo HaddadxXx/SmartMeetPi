@@ -9,7 +9,7 @@ import java.util.List;
 
 @RequestMapping("/Session")
 @CrossOrigin
-@Service
+@RestController
 public class SessionController {
 
     private final ISessionService iSessionService ;

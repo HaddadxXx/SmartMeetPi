@@ -1,20 +1,16 @@
 package tn.esprit.SmartMeet.Services.Event;
 
 
-import com.google.api.client.json.JsonFactory;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.ConferenceData;
 import com.google.api.services.calendar.model.CreateConferenceRequest;
 import com.google.api.services.calendar.model.EventDateTime;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
@@ -23,11 +19,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -37,30 +31,21 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.*;
 
-import com.google.api.client.json.JsonFactory;
-
 import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.ParticipateRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.SessionRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.ParticipateRepository;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.google.api.client.json.JsonFactory;
 import tn.esprit.SmartMeet.Services.UserServices.RahmaMailService;
 import tn.esprit.SmartMeet.Utils.GoogleAuthorizeUtil;
-import com.google.api.services.calendar.model.EntryPoint;
 
-import javax.imageio.spi.IIORegistry;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -133,8 +118,8 @@ public class EventService implements IEventService {
     }
 
     @Override
-    public Event getEventById(String id) {
-        return null;
+    public Optional<Event> getEventById(String id) {
+        return eventRepository.findById(id);
     }
 
     @Override
@@ -142,7 +127,54 @@ public class EventService implements IEventService {
         eventRepository.deleteById(id);
     }
 
-    @Override
+   @Override
+   public Event updateEvent(String id, Event event, MultipartFile file) {
+       try {
+           // 1. Récupérer l'événement existant
+           Event existingEvent = eventRepository.findById(id)
+                   .orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+
+           // 2. Mettre à jour les champs de l'événement existant
+           if (event.getNomEvent() != null) existingEvent.setNomEvent(event.getNomEvent());
+           if (event.getTheme() != null) existingEvent.setTheme(event.getTheme());
+           if (event.getDescription() != null) existingEvent.setDescription(event.getDescription());
+           if (event.getTypeEvent() != null) existingEvent.setTypeEvent(event.getTypeEvent());
+           if (event.getSessions() != null) existingEvent.setSessions(event.getSessions());
+           if (event.getHoraire() != null) existingEvent.setHoraire(event.getHoraire());
+           if (event.getLieu() != null) existingEvent.setLieu(event.getLieu());
+           if (event.getCapacite() != null) existingEvent.setCapacite(event.getCapacite());
+           if (event.getDateDebut() != null) existingEvent.setDateDebut(event.getDateDebut());
+           if (event.getDateFin() != null) existingEvent.setDateFin(event.getDateFin());
+
+           // 3. Gérer l'image seulement si un nouveau fichier est fourni
+           if (file != null && !file.isEmpty()) {
+               // Supprimer l'ancienne image si elle existe
+               if (existingEvent.getPhoto() != null && !existingEvent.getPhoto().isEmpty()) {
+                   Path oldPath = Paths.get("uploads/" + existingEvent.getPhoto());
+                   try {
+                       Files.deleteIfExists(oldPath);
+                   } catch (IOException e) {
+                       System.err.println("Failed to delete old image: " + e.getMessage());
+                   }
+               }
+
+               // Sauvegarder la nouvelle image
+               String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+               Path path = Paths.get("uploads/" + filename);
+               Files.write(path, file.getBytes());
+               existingEvent.setPhoto(filename);
+           }
+
+           // 4. Sauvegarder les modifications
+           return eventRepository.save(existingEvent);
+
+       } catch (IOException e) {
+           e.printStackTrace();
+           throw new RuntimeException("Erreur lors de l'upload de la photo");
+       }
+   }
+
+ /*  @Override
     public Event updateEvent(String id, Event event) {
         Event existingEvent = eventRepository.findById(id).orElse(null);
 
@@ -153,6 +185,8 @@ public class EventService implements IEventService {
             if (event.getDescription() != null) existingEvent.setDescription(event.getDescription());
             if (event.getTypeEvent() != null) existingEvent.setTypeEvent(event.getTypeEvent());
             if (event.getSessions() != null) existingEvent.setSessions(event.getSessions());
+            if (event.getHoraire() != null) existingEvent.setHoraire(event.getHoraire());
+            if (event.getLieu() != null) existingEvent.setLieu(event.getLieu());
 
             // Vérifie si la capacité a une valeur valide avant de l'appliquer
             if (event.getCapacite() != null) {
@@ -168,7 +202,7 @@ public class EventService implements IEventService {
         } else {
             throw new RuntimeException("Event not found with ID: " + id);
         }
-    }
+    }*/
 
     @Override
     public Session ajouterSessionEtAffecterAEvenement(Session session, String eventName) {
@@ -449,20 +483,32 @@ public class EventService implements IEventService {
     public List<Event> getTop5EvenementsTendance() {
         List<Event> events = eventRepository.findAll();
 
-        // Préparation : compter les participations et trier
+        // Calcul des participations totales
+        int totalParticipations = 0;
+        for (Event e : events) {
+            List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
+            int count = participations != null ? participations.size() : 0;
+            e.setParticipations(participations);
+            e.setNbParticipations(count);
+            totalParticipations += count;
+        }
+
+        // Trier les événements par nombre de participations
         List<Event> sortedEvents = events.stream()
-                .peek(e -> {
-                    List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
-                    e.setParticipations(participations); // remplissage manuel
-                    e.setNbParticipations(participations != null ? participations.size() : 0); // champ temporaire
-                })
-                .sorted((e1, e2) -> Integer.compare(e2.getNbParticipations(), e1.getNbParticipations())) // tri descendant
+                .sorted((e1, e2) -> Integer.compare(e2.getNbParticipations(), e1.getNbParticipations()))
                 .limit(5)
                 .collect(Collectors.toList());
 
-        // Ajout du rang (1 à 5)
+        // Ajouter le rang et le pourcentage
         for (int i = 0; i < sortedEvents.size(); i++) {
-            sortedEvents.get(i).setTendanceRank(i + 1); // champ temporaire
+            Event e = sortedEvents.get(i);
+            e.setTendanceRank(i + 1);
+            if (totalParticipations > 0) {
+                double pourcentage = (e.getNbParticipations() * 100.0) / totalParticipations;
+                e.setPourcentageParticipation(Math.round(pourcentage * 100.0) / 100.0); // arrondi à 2 chiffres
+            } else {
+                e.setPourcentageParticipation(0);
+            }
         }
 
         return sortedEvents;

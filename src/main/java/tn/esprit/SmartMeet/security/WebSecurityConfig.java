@@ -89,7 +89,6 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/uploads/profilimages/**").permitAll()
                     .requestMatchers("/uploads/profilimages/**").permitAll()
                     .requestMatchers("/api/events/addEvenement").permitAll()
-
                     .requestMatchers("/events/**").permitAll()
                     .requestMatchers("/events/test").permitAll()
                     .requestMatchers("/events/analyze").permitAll()
@@ -99,10 +98,14 @@ public class WebSecurityConfig {
                     .requestMatchers("/events/envoyerMailTest").permitAll()
                     .requestMatchers("/events/lancerMeetPourEvent/{eventId}").permitAll()
                     .requestMatchers("/events/createEventWithMeetLink").permitAll()
-                    .requestMatchers("/events/callback", "/events/oauth2/**").permitAll()
                     .requestMatchers("/Session/**").permitAll()
+                    .requestMatchers("/Session/{id}").permitAll()
+                    .requestMatchers("/Session/getAllSessions").permitAll()
+                    .requestMatchers("/events/callback", "/events/oauth2/**").permitAll()
                     .requestMatchers("/api/users/me").permitAll()
                     .requestMatchers("/events/getParticipantsEmails/{eventId}").permitAll()
+                    .requestMatchers("/events/getEventById/{id}").permitAll()
+                    .requestMatchers("/events/updateEvent/{id}").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
                     .requestMatchers("/api/friends/**").permitAll()          // Ajout pour tester la liste d'amis
