@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -35,7 +36,7 @@ public class Event {
     @NotBlank(message = "the theme is required ")
     @Size(min = 3 , max = 30)
     private String description ;
-    
+
     private TypeEvent typeEvent ;
 
     private LocalDate dateDebut ;
@@ -58,7 +59,12 @@ public class Event {
     @JsonIgnore
     private User user ;
 
+    private Double budget;
 
+    private String contractId; // 💡 Nouveau champ
+
+    private String sponsoringOfferId;
+    private List<SponsorshipRequest> sponsorRequests;
     public User getUser() {
         return user;
     }
@@ -66,12 +72,7 @@ public class Event {
     public void setUser(User user) {
         this.user = user;
     }
-    public void setConferenceData(ConferenceData conferenceData) {
-    }
 
-    public Group setSummary(String summary) {
-        return null;
-    }
 
     public List<User> getParticipants() {
         return  getParticipants() ;
@@ -80,5 +81,33 @@ public class Event {
     @DBRef  // Cette annotation permet d'utiliser une référence vers un autre document dans MongoDB
     @JsonIgnore  // Permet de sérialiser la relation de l'événement vers les utilisateurs
     private List<User> participants;
+
+    @Transient
+    private int nbParticipations;
+
+    @Transient
+    private int tendanceRank;
+
+    public int getNbParticipations() {
+        return nbParticipations;
+    }
+
+    public void setNbParticipations(int nbParticipations) {
+        this.nbParticipations = nbParticipations;
+    }
+
+    public int getTendanceRank() {
+        return tendanceRank;
+    }
+
+    public void setTendanceRank(int tendanceRank) {
+        this.tendanceRank = tendanceRank;
+    }
+
+    private double pourcentageParticipation;
+
+    public void setParticipations(List<Participate> participations) {
+        this.participants =participants ;
+    }
 }
 

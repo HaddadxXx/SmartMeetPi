@@ -1,69 +1,72 @@
 package tn.esprit.SmartMeet.Services.Event;
 
-
-import com.google.api.client.json.JsonFactory;
-
 import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.AuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.DateTime;
-import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.model.ConferenceData;
 import com.google.api.services.calendar.model.CreateConferenceRequest;
 import com.google.api.services.calendar.model.EventDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.SmartMeet.DAO.Entities.*;
 
-import com.google.api.client.json.JsonFactory;
-
-import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.ParticipateRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.SessionRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.UserRepository;
-import tn.esprit.SmartMeet.DAO.Repositories.ParticipateRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.*;
 
 import java.io.File;
 import java.io.IOException;
 
-import com.google.api.client.json.JsonFactory;
+import tn.esprit.SmartMeet.Services.UserServices.RahmaMailService;
+import tn.esprit.SmartMeet.Services.serviceIslem.ContractService;
 import tn.esprit.SmartMeet.Utils.GoogleAuthorizeUtil;
-import com.google.api.services.calendar.model.EntryPoint;
 
-import javax.imageio.spi.IIORegistry;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.security.GeneralSecurityException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequestMapping("/events")
 @CrossOrigin
 @Service
 public class EventService implements IEventService {
+    private JavaMailSender mailSender;
+    @Autowired
+    private RahmaMailService rahmaMailService;
 
+    private EventService eventService;
+private final ContractService contractService;
+    @Autowired
+
+private SponsoringOfferRepository sponsoringOfferRepository ;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final SessionRepository sessionRepository;
     private final ParticipateRepository participateRepository;
+    private String uploadDir;
 
-    public EventService(UserRepository userRepository, EventRepository eventRepository, SessionRepository sessionRepository, ParticipateRepository participateRepository) {
+    public EventService(ContractService contractService, UserRepository userRepository, EventRepository eventRepository, SessionRepository sessionRepository, ParticipateRepository participateRepository) {
+        this.contractService = contractService;
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.sessionRepository = sessionRepository;
@@ -80,9 +83,14 @@ public class EventService implements IEventService {
                 evenement.setPhoto(filename); // Stocke juste le nom ou le chemin relatif
             }
 
+            // Récupérer l'utilisateur connecté (avec Spring Security)
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String currentUserId = authentication.getName(); // ou autre selon ton système d'authentification
+            String currentUserId = authentication.getName();  // Utilise le nom d'utilisateur ou l'ID
+
+            // Assigner l'ID de l'utilisateur créateur à l'événement
             evenement.setOwnerId(currentUserId);
+
+
             //   System.out.println("Tentative d'ajout dans la base : " + evenement);
             return eventRepository.save(evenement);
 
@@ -91,7 +99,6 @@ public class EventService implements IEventService {
             throw new RuntimeException("Erreur lors de l'upload de la photo");
         }
     }
-
     @Override
     public User getUserByOwnerEvent(String eventId) {
         Event event = eventRepository.findById(eventId)
@@ -100,19 +107,19 @@ public class EventService implements IEventService {
     }
 
 
-    /* @Override
+     @Override
      public List<Event> getEventsByOwner( String ownerId){
          List<Event> events = eventRepository.findByOwnerId(ownerId);
          return eventRepository.findByOwnerId(ownerId);
-     }*/
+     }
     @Override
     public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }
 
     @Override
-    public Event getEventById(String id) {
-        return null;
+    public Optional<Event> getEventById(String id) {
+        return eventRepository.findById(id);
     }
 
     @Override
@@ -121,6 +128,53 @@ public class EventService implements IEventService {
     }
 
     @Override
+    public Event updateEvent(String id, Event event, MultipartFile file) {
+        try {
+            // 1. Récupérer l'événement existant
+            Event existingEvent = eventRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Event not found with ID: " + id));
+
+            // 2. Mettre à jour les champs de l'événement existant
+            if (event.getNomEvent() != null) existingEvent.setNomEvent(event.getNomEvent());
+            if (event.getTheme() != null) existingEvent.setTheme(event.getTheme());
+            if (event.getDescription() != null) existingEvent.setDescription(event.getDescription());
+            if (event.getTypeEvent() != null) existingEvent.setTypeEvent(event.getTypeEvent());
+            if (event.getSessions() != null) existingEvent.setSessions(event.getSessions());
+            if (event.getHoraire() != null) existingEvent.setHoraire(event.getHoraire());
+            if (event.getLieu() != null) existingEvent.setLieu(event.getLieu());
+            if (event.getCapacite() != null) existingEvent.setCapacite(event.getCapacite());
+            if (event.getDateDebut() != null) existingEvent.setDateDebut(event.getDateDebut());
+            if (event.getDateFin() != null) existingEvent.setDateFin(event.getDateFin());
+
+            // 3. Gérer l'image seulement si un nouveau fichier est fourni
+            if (file != null && !file.isEmpty()) {
+                // Supprimer l'ancienne image si elle existe
+                if (existingEvent.getPhoto() != null && !existingEvent.getPhoto().isEmpty()) {
+                    Path oldPath = Paths.get("uploads/" + existingEvent.getPhoto());
+                    try {
+                        Files.deleteIfExists(oldPath);
+                    } catch (IOException e) {
+                        System.err.println("Failed to delete old image: " + e.getMessage());
+                    }
+                }
+
+                // Sauvegarder la nouvelle image
+                String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                Path path = Paths.get("uploads/" + filename);
+                Files.write(path, file.getBytes());
+                existingEvent.setPhoto(filename);
+            }
+
+            // 4. Sauvegarder les modifications
+            return eventRepository.save(existingEvent);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de l'upload de la photo");
+        }
+    }
+
+ /*  @Override
     public Event updateEvent(String id, Event event) {
         Event existingEvent = eventRepository.findById(id).orElse(null);
 
@@ -131,6 +185,8 @@ public class EventService implements IEventService {
             if (event.getDescription() != null) existingEvent.setDescription(event.getDescription());
             if (event.getTypeEvent() != null) existingEvent.setTypeEvent(event.getTypeEvent());
             if (event.getSessions() != null) existingEvent.setSessions(event.getSessions());
+            if (event.getHoraire() != null) existingEvent.setHoraire(event.getHoraire());
+            if (event.getLieu() != null) existingEvent.setLieu(event.getLieu());
 
             // Vérifie si la capacité a une valeur valide avant de l'appliquer
             if (event.getCapacite() != null) {
@@ -146,7 +202,7 @@ public class EventService implements IEventService {
         } else {
             throw new RuntimeException("Event not found with ID: " + id);
         }
-    }
+    }*/
 
     @Override
     public Session ajouterSessionEtAffecterAEvenement(Session session, String eventName) {
@@ -156,6 +212,8 @@ public class EventService implements IEventService {
             throw new RuntimeException("Aucun événement trouvé avec le nom : " + eventName);
         }
 
+        // Lier la session à l'événement
+        session.setEvenement(nomEvent);
 
         // Sauvegarder la session si elle n'existe pas encore
         session = sessionRepository.save(session);
@@ -215,65 +273,8 @@ public class EventService implements IEventService {
         return eventRepository.findAll(pageable);
     }
 
-    /* public Participate participateToEvent(String email, String eventId) {
-         User user = userRepository.findByEmail(email)
-                 .orElseThrow(() -> new RuntimeException("User not found"));
-         Event event = eventRepository.findById(eventId)
-                 .orElseThrow(() -> new RuntimeException("Event not found"));
-         // Affichage de l'id utilisateur dans la console
-       //  System.out.println("User ID: " + user.getId());
-         Participate participate = new Participate();
-         participate.setUser(user);
-         participate.setEvent(event);
-         participate.setDateOfParticpation(LocalDate.now());
 
-         return participateRepository.save(participate);
-     }*/
-/*   public Participate participateToEvent(String email, String eventId, MultipartFile file) {
-       User user = userRepository.findByEmail(email)
-               .orElseThrow(() -> new RuntimeException("User not found"));
 
-       Event event = eventRepository.findById(eventId)
-               .orElseThrow(() -> new RuntimeException("Event not found"));
-
-       Participate participate = new Participate();
-       participate.setUser(user);
-       participate.setEvent(event);
-       participate.setDateOfParticpation(LocalDate.now());
-
-       if (file != null && !file.isEmpty()) {
-           try {
-               // ✅ Chemin absolu dynamique vers le dossier "uploads/participation" dans le projet
-               String uploadDir = System.getProperty("user.dir") + File.separator + "uploads" + File.separator ;
-
-               File uploadPath = new File(uploadDir);
-               if (!uploadPath.exists()) {
-                   boolean created = uploadPath.mkdirs();
-                   if (!created) {
-                       throw new RuntimeException("Could not create upload directory: " + uploadDir);
-                   }
-               }
-
-               // ✅ Nom unique
-               String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-               // ✅ Destination complète
-               File destinationFile = new File(uploadPath, fileName);
-               file.transferTo(destinationFile);
-
-               System.out.println("Fichier reçu : " + file.getOriginalFilename());
-
-               // ✅ Chemin relatif stocké
-               participate.setFilePath("uploads/" + fileName);
-
-           } catch (IOException e) {
-               throw new RuntimeException("Error while uploading file: " + e.getMessage());
-           }
-       }
-
-       return participateRepository.save(participate);
-   }
-*/
     public Participate participateToEvent(String email, String eventId, MultipartFile file) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -382,36 +383,21 @@ public class EventService implements IEventService {
     }
 
 
-    public void afficherParticipantsParCreateur(String userId) {
-        List<Participate> participations = participateRepository.findByEvent_User_Id(userId);
 
-        for (Participate p : participations) {
-            String participantName = p.getUser().getFirstName() + " " + p.getUser().getLastName();
-            String eventName = p.getEvent().getNomEvent();
-            String eventOwner = p.getEvent().getUser().getFirstName() + " " + p.getEvent().getUser().getLastName();
-
-            System.out.println("Participant : " + participantName);
-            System.out.println("Événement : " + eventName);
-            System.out.println("Créé par : " + eventOwner);
-            System.out.println("-------------------------------");
-        }
-
-
-    }
 
     @Override
     public String lancerMeetPourEvent(String eventId) {
         try {
-            // 1. Chercher l'événement MongoDB
+            // 1. Chercher l'événement
             tn.esprit.SmartMeet.DAO.Entities.Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Événement introuvable avec l'ID: " + eventId));
 
-            // 2. Vérifier si c'est bien un événement en ligne
+            // 2. Vérifier le type
             if (event.getTypeEvent() != TypeEvent.ENLIGNE) {
                 throw new RuntimeException("Seuls les événements en ligne peuvent lancer un Google Meet.");
             }
 
-            // 3. Se connecter à Google Calendar
+            // 3. Connexion Google Calendar
             Credential credential = GoogleAuthorizeUtil.authorize();
             Calendar service = new Calendar.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -419,7 +405,7 @@ public class EventService implements IEventService {
                     credential
             ).setApplicationName("My App").build();
 
-            // 4. Créer l'événement Google Calendar
+            // 4. Créer l’événement
             com.google.api.services.calendar.model.Event googleEvent = new com.google.api.services.calendar.model.Event()
                     .setSummary(event.getNomEvent())
                     .setDescription(event.getDescription())
@@ -435,14 +421,22 @@ public class EventService implements IEventService {
                     .setConferenceDataVersion(1)
                     .execute();
 
-            // 5. Récupérer le lien Meet
+            // 5. Récupérer le lien
             String meetLink = googleEvent.getHangoutLink();
 
-            // 6. Sauvegarder le lien dans l'événement MongoDB
+            // 6. Sauvegarder dans Mongo
             event.setMeetLink(meetLink);
             eventRepository.save(event);
 
-            // 7. Retourner le lien
+            // 7. Envoyer le mail via RahmaMailService
+            List<String> emails = getParticipantsEmailsByEventId(eventId);
+            for (String to : emails) {
+                String sujet = "📢 Lien de participation à l’événement : " + event.getNomEvent();
+                String corps = "Bonjour,\n\nVoici le lien Google Meet pour participer à l’événement « "
+                        + event.getNomEvent() + " » :\n\n" + meetLink + "\n\nÀ bientôt sur SmartMeet !";
+                rahmaMailService.envoyerMail(to, sujet, corps);
+            }
+
             return meetLink;
 
         } catch (Exception e) {
@@ -450,21 +444,129 @@ public class EventService implements IEventService {
         }
     }
 
-    @Override
-    public List<String> getParticipantsEmails(String eventId) {
-        try {
-            System.out.println("Recherche des participants pour l'eventId : " + eventId);
-            Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Événement non trouvé"));
-            System.out.println("Événement trouvé : " + event.getNomEvent());
-            return event.getParticipants().stream()
-                    .map(User::getEmail)
-                    .collect(Collectors.toList());
 
-        } catch (Exception e) {
-            System.out.println("Erreur : " + e.getMessage());
-            throw e;
-        }
+    @Override
+    public Map<String, Object> analyzeFileWithAI(File file, String theme) {
+        String flaskUrl = "http://localhost:5000/analyze";
+
+        // Créer la requête multipart
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("theme", theme);
+        body.add("file", new FileSystemResource(file));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(flaskUrl, requestEntity, Map.class);
+        return response.getBody();
     }
+
+    @Override
+    public List<String> getParticipantsEmailsByEventId(String eventId) {
+        List<Participate> participations = participateRepository.findByEvent_IdEvent(eventId);
+        return participations.stream()
+                .filter(p -> p.getUser() != null) // filtre les participations invalides
+                .map(p -> p.getUser().getEmail())
+                .collect(Collectors.toList());
+    }
+
+
+
+
+
+
+    @Override
+    public List<Event> getTop5EvenementsTendance() {
+        List<Event> events = eventRepository.findAll();
+
+        // Calcul des participations totales
+        int totalParticipations = 0;
+        for (Event e : events) {
+            List<Participate> participations = participateRepository.findByEvent_IdEvent(e.getIdEvent());
+            int count = participations != null ? participations.size() : 0;
+            e.setParticipations(participations);
+            e.setNbParticipations(count);
+            totalParticipations += count;
+        }
+
+        // Trier les événements par nombre de participations
+        List<Event> sortedEvents = events.stream()
+                .sorted((e1, e2) -> Integer.compare(e2.getNbParticipations(), e1.getNbParticipations()))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        // Ajouter le rang et le pourcentage
+        for (int i = 0; i < sortedEvents.size(); i++) {
+            Event e = sortedEvents.get(i);
+            e.setTendanceRank(i + 1);
+            if (totalParticipations > 0) {
+                double pourcentage = (e.getNbParticipations() * 100.0) / totalParticipations;
+                e.setPourcentageParticipation(Math.round(pourcentage * 100.0) / 100.0); // arrondi à 2 chiffres
+            } else {
+                e.setPourcentageParticipation(0);
+            }
+        }
+
+        return sortedEvents;
+    }
+
+   /* @Override
+    public User getCurrentUser(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable avec l'email : " + email));
+    }*/
+
+
+    @Transactional
+    public Event addSponsoringToEvent(String eventId, String offerId) {
+        // Récupérer les entités
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Événement non trouvé"));
+        SponsoringOffer offer = sponsoringOfferRepository.findById(offerId)
+                .orElseThrow(() -> new RuntimeException("Offre non trouvée"));
+
+        // Mise à jour BIDIRECTIONNELLE
+        event.setSponsoringOfferId(offerId);
+
+        eventRepository.save(event);
+
+
+        contractService.checkAndGenerateContract(eventId, offerId);
+
+        return event;
+    }
+
+
+    @Override
+    public User getOwnerByEventId(String eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found with ID: " + eventId));
+
+        return userRepository.findByEmail(event.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + event.getOwnerId()));
+    }
+
+    @Override
+    public Event getEventByAuthenticated(String email) {
+        return eventRepository.findByOwnerId(email)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No event found for user with email: " + email));}
+    @Override
+    public List<Event> getEventByAuthenticatedUser(String email) {
+        List<Event> events = eventRepository.findByOwnerId(email);
+
+        if (events.isEmpty()) {
+            throw new RuntimeException("No events found for user with email: " + email);
+        }
+
+        return events;
+    }
+
 }
 
 

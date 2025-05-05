@@ -1,6 +1,7 @@
 package tn.esprit.SmartMeet.security;
 
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.RestTemplate;
 import tn.esprit.SmartMeet.DAO.Repositories.BlacklistedTokenRepository;
 import tn.esprit.SmartMeet.security.jwt.JwtUtils;
 import org.springframework.context.annotation.Bean;
@@ -57,6 +58,13 @@ public class WebSecurityConfig {
     return new AuthTokenFilter(jwtUtils, userDetailsService, blacklistedTokenRepository);
   }
 
+
+
+    @Bean
+    public RestTemplate restTemplate() {
+      return new RestTemplate();
+    }
+
   @Bean
   public DaoAuthenticationProvider authenticationProvider() {
     DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -88,7 +96,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/api/uploads/**").permitAll()
                     .requestMatchers("/api/uploads/profilimages/**").permitAll()
                     .requestMatchers("/uploads/profilimages/**").permitAll()
-                    .requestMatchers("/api/events/addEvenement").permitAll()
+                    .requestMatchers("/events/addEvenement").permitAll()
+                    .requestMatchers("/uploads").permitAll()
                     .requestMatchers("/events/**").permitAll()
                     .requestMatchers("/events/test").permitAll()
                     .requestMatchers("/events/paginated").permitAll()
@@ -96,12 +105,22 @@ public class WebSecurityConfig {
                     .requestMatchers("/events/lancerMeetPourEvent/{eventId}").permitAll()
                     .requestMatchers("/events/createEventWithMeetLink").permitAll()
                     .requestMatchers("/events/callback", "/events/oauth2/**").permitAll()
-                    .requestMatchers("/Session/**").permitAll()
                     .requestMatchers("/api/users/me").permitAll()
                     .requestMatchers("/events/getParticipantsEmails/{eventId}").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
-                    .requestMatchers("/api/friends/**").permitAll()          // Ajout pour tester la liste d'amis
+                    .requestMatchers("/api/friends/**").permitAll()
+                    .requestMatchers("/api/groups/**").permitAll()
+                    .requestMatchers("/api/offers/**").permitAll()
+                    .requestMatchers("/api/offers/id").permitAll()
+                    .requestMatchers("/Session/**").permitAll()
+                    .requestMatchers("/Session/{id}").permitAll()
+                    .requestMatchers("/Session/getAllSessions").permitAll()
+                    .requestMatchers("/events/my-event").permitAll()
+
+                    .requestMatchers("events/affecter-sponsoring").permitAll()
+                    .requestMatchers("/api/contracts/**").permitAll()
+                    .requestMatchers("/api/requests/**").permitAll()// Ajout pour tester la liste d'amis
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/groups/create").authenticated()
                     //.requestMatchers("/api/groups/**").permitAll()

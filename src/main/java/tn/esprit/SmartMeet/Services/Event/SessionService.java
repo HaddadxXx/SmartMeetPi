@@ -6,6 +6,8 @@ import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.SessionRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class SessionService implements ISessionService {
 
@@ -31,9 +33,17 @@ public class SessionService implements ISessionService {
 
     @Override
     public List<Session> getAllSessions() {
-        return sessionRepository.findAll();
-    }
+        List<Session> sessions = sessionRepository.findAll();
 
+        for (Session session : sessions) {
+            String eventName = (session.getEvenement() != null)
+                    ? session.getEvenement().getNomEvent()
+                    : "Non associé";
+            session.setNomEvent(eventName);
+        }
+
+        return sessions;
+    }
     @Override
     public Session getSessionById(String id) {
         return sessionRepository.findById(id).orElse(null);

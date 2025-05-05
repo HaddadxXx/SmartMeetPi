@@ -1,0 +1,108 @@
+package tn.esprit.SmartMeet.RestControllers;
+import tn.esprit.SmartMeet.DAO.Entities.Event;
+import tn.esprit.SmartMeet.DAO.Entities.SponsoringOffer;
+import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
+import tn.esprit.SmartMeet.DAO.Repositories.SponsoringOfferRepository;
+import tn.esprit.SmartMeet.Services.serviceIslem.ContractService;
+import tn.esprit.SmartMeet.Services.serviceIslem.SponsoringOfferService;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@CrossOrigin(origins = "http://localhost:4200")
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/api/offers")
+public class SponsoringOfferController {
+    @Autowired
+    private SponsoringOfferService service;
+    @Autowired
+    private ContractService contractService;
+    @Autowired
+    private SponsoringOfferRepository sponsoringOfferRepository;
+
+
+
+    @GetMapping
+    public List<SponsoringOffer> getAllOffers() {
+        List<SponsoringOffer> offers = service.getAllOffers();
+        System.out.println("Offres trouvées dans la base de données: " + offers);
+        return offers;
+    }
+    @PostMapping
+    public SponsoringOffer createOffer(@RequestBody SponsoringOffer offer) {
+        System.out.println("Offre reçue : " + offer);  // Ajoute ce log
+        try {
+            return service.createOffer(offer);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public SponsoringOffer updateOffer(@PathVariable String id, @RequestBody SponsoringOffer updatedOffer) {
+        try {
+            return service.updateOffer(id, updatedOffer);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteOffer(@PathVariable String id) {
+        service.deleteOffer(id);
+    }
+    @PutMapping("/affecter-event-a-offre/{offerId}/{eventId}")
+    public ResponseEntity<String> affecterEventToSponsoringOffer(
+            @PathVariable String offerId,
+            @PathVariable String eventId) {
+        service.addEventToSponsoringOffer(offerId, eventId);
+        contractService.checkAndGenerateContract(eventId, offerId); // Appel après la transaction
+        return ResponseEntity.ok("Événement associé à l’offre et contrat généré !");
+    }
+    @GetMapping("/{id}/recommend-event")
+    public ResponseEntity<?> recommendEvent(@PathVariable String id) {
+        SponsoringOffer offer = service.getOfferById(id);
+        if (offer == null) {
+            return ResponseEntity.notFound().build();
+        }
+        try {
+            Map<String, Object> recommendation = service.getRecommendation(offer.getAmount());
+            if (recommendation != null && recommendation.containsKey("id")) {
+                String eventId = recommendation.get("id").toString();
+
+                // Mettre à jour l'offre avec l'ID de l'événement recommandé
+                offer.setEventId(eventId);
+                sponsoringOfferRepository.save(offer);
+
+
+
+                // Régénérer la réponse avec les IDs mis à jour
+                recommendation.put("offerId", offer.getId());
+                recommendation.put("eventId", eventId);
+            }
+
+
+            return ResponseEntity.ok(recommendation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body("Service de recommandation indisponible: " + e.getMessage());
+        }
+    }
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Long>> getOfferStatistics() {
+        Map<String, Long> statistics = service.getOfferStatistics();
+        return ResponseEntity.ok(statistics);
+    }
+
+}
+

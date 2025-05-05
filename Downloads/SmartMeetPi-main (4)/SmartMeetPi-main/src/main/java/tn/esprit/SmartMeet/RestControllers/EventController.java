@@ -1,20 +1,12 @@
 package tn.esprit.SmartMeet.RestControllers;
-import com.itextpdf.kernel.pdf.PdfDocument;
-import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import java.io.ByteArrayOutputStream;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.properties.TextAlignment;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import tn.esprit.SmartMeet.DAO.Entities.Contract;
 import tn.esprit.SmartMeet.DAO.Repositories.ContractRepository;
 import tn.esprit.SmartMeet.DAO.Repositories.EventRepository;
@@ -22,11 +14,8 @@ import tn.esprit.SmartMeet.DAO.Repositories.SponsorshipRequestRepository;
 import tn.esprit.SmartMeet.DAO.Entities.Event;
 import tn.esprit.SmartMeet.DAO.Entities.SponsorshipRequest;
 
-import com.itextpdf.layout.element.Paragraph;
-
 import org.springframework.http.ResponseEntity;
 import tn.esprit.SmartMeet.Services.serviceIslem.ContractService;
-import tn.esprit.SmartMeet.Services.serviceIslem.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
