@@ -18,6 +18,7 @@ public interface IGroupService {
     String removeMemberFromGroup(String groupId, String userId);  // Supprimer un membre
     List<Group> getByMember(String userId);
     List<Group> getByOwner(String userId);
+    List<Group> getAllExceptMember(String userId);
 
 }
 

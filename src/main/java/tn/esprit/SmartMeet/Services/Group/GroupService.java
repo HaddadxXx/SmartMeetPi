@@ -313,6 +313,24 @@ public class GroupService implements IGroupService {
         return user.map(groupRepository::findByOwner).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    /**
+     * Renvoie la liste de tous les groupes,
+     * sauf ceux où l'utilisateur (userId) est membre.
+     */
+    @Override
+    public List<Group> getAllExceptMember(String userId) {
+        // 1. récupère la liste complète
+        List<Group> allGroups = groupRepository.findAll();
+
+        // 2. récupère les groupes dont il est membre
+        List<Group> memberGroups = getByMember(userId);
+
+        // 3. filtre : tous sauf ceux-ci
+        return allGroups.stream()
+                .filter(g -> !memberGroups.contains(g))
+                .toList();
+    }
+
 }
 
 

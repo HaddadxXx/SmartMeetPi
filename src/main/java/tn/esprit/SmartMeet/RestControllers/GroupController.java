@@ -67,4 +67,11 @@ public class GroupController {
     public List<Group> getGroupsByMember(@PathVariable String memberId) {
         return groupService.getByMember(memberId);
     }
+
+
+    @GetMapping("/all-except/{memberId}")
+    public List<Group> getAllExceptMember(@PathVariable String memberId) {
+        return groupService.getAllExceptMember(memberId);
+    }
+
 }
