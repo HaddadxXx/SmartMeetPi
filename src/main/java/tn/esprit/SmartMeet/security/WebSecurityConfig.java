@@ -106,6 +106,9 @@ public class WebSecurityConfig {
 
 
                     .requestMatchers("/api/users/me").permitAll()
+                    .requestMatchers("api/recommendations/**").permitAll()
+                    .requestMatchers("api/recommendations/ids/**").permitAll()
+                    .requestMatchers("api/**").permitAll()
                     .requestMatchers("/api/users/**").permitAll()
                     .requestMatchers("/api/users/search").permitAll()
                     .requestMatchers("/api/friend-requests/**").permitAll() // Ajout pour tester friend requests
@@ -115,6 +118,8 @@ public class WebSecurityConfig {
                     .requestMatchers("/app/sendMessage/**").permitAll() // Point de réception des messages
                     .requestMatchers("/topic/**").permitAll()       // Point de diffusion des messages
                     .requestMatchers("http://localhost:8080/ws").permitAll()
+                    .requestMatchers("api/calls/**").permitAll()
+                    .requestMatchers("/api/call-requests**").permitAll()
                     .requestMatchers(HttpMethod.OPTIONS, "/ws/**").permitAll()
                     .requestMatchers("/api/groups/**").permitAll()
                     .requestMatchers("/api/messages/**").permitAll()
